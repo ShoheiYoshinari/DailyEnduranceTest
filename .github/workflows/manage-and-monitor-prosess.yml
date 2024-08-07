@@ -29,13 +29,6 @@ jobs:
         id: manage_process
         shell: pwsh
         run: |
-          param (
-            [string]$Action,
-            [datetime]$Time
-          )
-
+          $Action = "${{ github.event.inputs.action || 'check' }}"
+          $Time = if (${{ github.event.inputs.time }}) { [datetime]${{ github.event.inputs.time }} } else { [datetime](Get-Date) }
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
-
-        with:
-          Action: ${{ github.event.inputs.action || 'check' }}
-          Time: ${{ github.event.inputs.time || '' }}
