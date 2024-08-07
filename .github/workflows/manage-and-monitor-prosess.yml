@@ -8,7 +8,15 @@ on:
     # 5分ごとにプロセスの状態を確認
     #- cron: '*/5 22-23,0-5 * * *'
     - cron: '*/5 * * * *'
-
+worlkflow_dispatch:
+  input:
+    action:
+      description: 'Action to perform (start, stop, check)'
+        required: true
+        default: 'check'
+      time:
+        description: 'Time to execute the action'
+        required: false
 
 jobs:
   manage-and-monitor:
@@ -18,8 +26,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Run PowerShell Script to Manage and Check Process
-        id: manage_and_check_process
+      - name: Run Manage and Monitor Process
+        id: manage_and_monitor_process
         shell: pwsh
         run: |
           $currentHour = (Get-Date).Hour
