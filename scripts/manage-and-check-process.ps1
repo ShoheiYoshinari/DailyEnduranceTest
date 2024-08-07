@@ -4,7 +4,14 @@ param (
 )
 
 $processName = "mspaint"
-$logFile = "C:\Logs\process_status.log"
+$logDir = "C:\Logs"
+$logFile = "$logDir\process_status.log"
+
+# ログディレクトリが存在するか確認し、存在しない場合は作成
+if (-not (Test-Path $logDir)) {
+    New-Item -Path $logDir -ItemType Directory | Out-Null
+}
+
 $currentTime = Get-Date
 
 if ($Action -eq "start") {
