@@ -6,7 +6,9 @@ on:
     - cron: '0 22 * * *'
     - cron: '0 6 * * *'
     # 5分ごとにプロセスの状態を確認
-    - cron: '*/5 22-23,0-5 * * *'
+    #- cron: '*/5 22-23,0-5 * * *'
+    - cron: '*/5 * * * *'
+
 
 jobs:
   manage-and-monitor:
@@ -22,11 +24,11 @@ jobs:
         run: |
           $currentHour = (Get-Date).Hour
           if ($currentHour -eq 22) {
-            .\path\to\your\manage-and-check-process.ps1 -Action start
+            .\scripts\manage-and-check-process.ps1 -Action start
           } elseif ($currentHour -eq 6) {
-            .\path\to\your\manage-and-check-process.ps1 -Action stop
+            .\scripts\manage-and-check-process.ps1 -Action stop
           } else {
-            .\path\to\your\manage-and-check-process.ps1 -Action check
+            .\scripts\manage-and-check-process.ps1 -Action check
           }
 
       - name: Notify on Process Status
