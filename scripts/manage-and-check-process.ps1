@@ -1,7 +1,11 @@
 param (
   [string]$Action,
-  [datetime]$Time = $(Get-Date)  # デフォルトで現在時刻を設定
+  [datetime]$Time
 )
+
+# デバッグ用の出力
+Write-Output "指定されたアクション: $Action"
+Write-Output "指定された時刻: $Time"
 
 if ($Action -eq 'start') {
   if ($Time.Hour -eq 22) {

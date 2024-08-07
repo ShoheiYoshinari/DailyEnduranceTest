@@ -2,15 +2,17 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    - cron: '0 22 * * *'    # 22時にプロセスを開始
-    - cron: '0 6 * * *'     # 6時にプロセスを終了
-    - cron: '*/5 * * * *'   # 5分ごとにプロセスの状態を確認
+    # 5分ごとにプロセスの状態を確認
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       action:
         description: 'Action to perform (start, stop, check)'
         required: true
         default: 'check'
+      time:
+        description: 'Time to execute the action (format: HH:mm)'
+        required: true
 
 jobs:
   manage-process:
@@ -23,10 +25,11 @@ jobs:
       - name: Set Environment Variables
         run: |
           echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
+          echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
 
       - name: Manage and Check MS Paint Process
         shell: powershell
         run: |
           $Action = $env:ACTION
-          $Time = Get-Date
+          $Time = [datetime]::ParseExact($env:TIME, 'HH:mm', $null)
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
