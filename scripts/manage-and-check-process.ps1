@@ -1,40 +1,37 @@
+# manage-and-check-process.ps1
+
 param (
-  [string]$Action,
-  [datetime]$Time
+    [string]$Action
 )
 
-# デバッグ用の出力
-Write-Output "指定されたアクション: $Action"
-Write-Output "指定された時刻: $Time"
+$processName = "mspaint"
+$logFile = "C:\Logs\process_status.log"
 
-try {
-    if ($Action -eq 'start') {
-        if ($Time.Hour -eq 22) {
-            # 22時にプロセスを開始
-            Start-Process "mspaint.exe" # 監視したいプロセスに変更
-            Write-Output "MS Paint プロセスを開始しました。"
-        } else {
-            Write-Output "指定された時刻にプロセスを開始できません。"
-        }
-    } elseif ($Action -eq 'stop') {
-        if ($Time.Hour -eq 6) {
-            # 6時にプロセスを終了
-            Get-Process "mspaint" -ErrorAction SilentlyContinue | Stop-Process
-            Write-Output "MS Paint プロセスを終了しました。"
-        } else {
-            Write-Output "指定された時刻にプロセスを終了できません。"
-        }
-    } elseif ($Action -eq 'check') {
-        # プロセスの状態を確認
-        $process = Get-Process "mspaint" -ErrorAction SilentlyContinue
-        if ($process) {
-            Write-Output "MS Paintは実行中です。"
-        } else {
-            Write-Output "MS Paintは実行していません。"
-        }
+$currentTime = Get-Date
+
+if ($Action -eq "start") {
+    # 22時にプロセスを開始
+    Start-Process "mspaint.exe"
+    Write-Output "[$currentTime] MS Paint プロセスを開始しました。" | Out-File -Append -FilePath $logFile
+} elseif ($Action -eq "stop") {
+    # 6時にプロセスを終了
+    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
+    if ($processes) {
+        Stop-Process -Name $processName -Force
+        Write-Output "[$currentTime] MS Paint プロセスを終了しました。" | Out-File -Append -FilePath $logFile
     } else {
-        Write-Output "無効なアクションが指定されました: $Action"
+        Write-Output "[$currentTime] MS Paint プロセスは実行されていません。" | Out-File -Append -FilePath $logFile
     }
-} catch {
-    Write-Output "エラーが発生しました: $_"
+} elseif ($Action -eq "check") {
+    # プロセスの状態を確認
+    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
+    if ($processes) {
+        Write-Output "[$currentTime] MS Paint プロセスは実行中です。" | Out-File -Append -FilePath $logFile
+    } else {
+        Write-Output "[$currentTime] MS Paint プロセスは終了しています。" | Out-File -Append -FilePath $logFile
+        exit 1  # エラーコードを返す
+    }
+} else {
+    Write-Output "[$currentTime] 無効なアクションです。'start', 'stop', または 'check' を指定してください。" | Out-File -Append -FilePath $logFile
+    exit 1
 }

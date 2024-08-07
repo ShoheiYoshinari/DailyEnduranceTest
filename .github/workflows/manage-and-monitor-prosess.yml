@@ -2,44 +2,34 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
+    # 22時にプロセスを開始し、6時にプロセスを終了する設定
+    - cron: '0 22 * * *'
+    - cron: '0 6 * * *'
     # 5分ごとにプロセスの状態を確認
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Action to perform (start, stop, check)'
-        required: true
-        default: 'check'
-      time:
-        description: 'Time to execute the action (format: HH:mm)'
-        required: true
+    - cron: '*/5 22-23,0-5 * * *'
 
 jobs:
-  manage-process:
+  manage-and-monitor:
     runs-on: [self-hosted, windows]  # セルフホストランナーとWindows環境を指定
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set Environment Variables
+      - name: Run PowerShell Script to Manage and Check Process
+        id: manage_and_check_process
+        shell: pwsh
         run: |
-          echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
-          echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
-
-      - name: Manage and Check MS Paint Process
-        shell: powershell
-        run: |
-          $Action = $env:ACTION
-          try {
-            # TIMEの形式を検証し、適切なDateTimeオブジェクトに変換
-            if ($env:TIME -match '^\d{2}:\d{2}$') {
-              $Time = [datetime]::ParseExact($env:TIME, 'HH:mm', $null)
-            } else {
-              throw "指定されたTIMEの形式が正しくありません: $env:TIME"
-            }
-          } catch {
-            Write-Error "時間の変換エラー: $_"
-            exit 1
+          $currentHour = (Get-Date).Hour
+          if ($currentHour -eq 22) {
+            .\path\to\your\manage-and-check-process.ps1 -Action start
+          } elseif ($currentHour -eq 6) {
+            .\path\to\your\manage-and-check-process.ps1 -Action stop
+          } else {
+            .\path\to\your\manage-and-check-process.ps1 -Action check
           }
-          .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
+
+      - name: Notify Process Management
+        if: failure()  # プロセス管理に失敗した場合
+        run: |
+          echo "MS Paint プロセスの管理に失敗しました。"
