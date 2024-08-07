@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '0 22 * * *'    # 22時にプロセスを開始
     - cron: '0 6 * * *'     # 6時にプロセスを終了
-    - cron: '*/5 22-23,0-5 * * *' # 5分ごとにプロセスの状態を確認
+    - cron: '*/5 22-23,0-5 * * *'   # 5分ごとにプロセスの状態を確認
   workflow_dispatch:
     inputs:
       action:
@@ -23,10 +23,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Set Environment Variables
+        run: |
+          echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
+          echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
+
       - name: Manage and Check MS Paint Process
-        id: manage_process
         shell: powershell
         run: |
-          $Action = "${{ github.event.inputs.action || 'check' }}"
-          $Time = if (${{ github.event.inputs.time }}) { [datetime]${{ github.event.inputs.time }} } else { $null }
+          $Action = $env:ACTION
+          $Time = if ($env:TIME) { [datetime]$env:TIME } else { $null }
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
