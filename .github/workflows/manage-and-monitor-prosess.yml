@@ -29,11 +29,11 @@ jobs:
           $Action = $env:ACTION
           $currentHour = (Get-Date).Hour
           if ($currentHour -eq 22 -and $Action -eq "start") {
-            .\path\to\your\manage-and-check-process.ps1 -Action start
+            .\scripts\manage-and-check-process.ps1 -Action start
           } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
-            .\path\to\your\manage-and-check-process.ps1 -Action stop
+            .\scripts\manage-and-check-process.ps1 -Action stop
           } elseif ($Action -eq "check") {
-            .\path\to\your\manage-and-check-process.ps1 -Action check
+            .\scripts\manage-and-check-process.ps1 -Action check
           } else {
             Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
             exit 1
