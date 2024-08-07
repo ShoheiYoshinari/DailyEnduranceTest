@@ -32,7 +32,7 @@ jobs:
         run: |
           $Action = "${{ github.event.inputs.action }}"
           $Time = if ($env:TIME) { [datetime]::ParseExact('${{ github.event.inputs.time }}', 'HH:mm', $null) } else { Get-Date }
-          .\path\to\your\manage-and-check-process.ps1 -Action $Action -Time $Time
+          .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
 
       - name: Notify Process Management
         if: failure()  # プロセス管理に失敗した場合
