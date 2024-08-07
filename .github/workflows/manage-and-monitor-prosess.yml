@@ -11,9 +11,6 @@ on:
         description: 'Action to perform (start, stop, check)'
         required: true
         default: 'check'
-      time:
-        description: 'Time to execute the action'
-        required: false
 
 jobs:
   manage-process:
@@ -26,11 +23,10 @@ jobs:
       - name: Set Environment Variables
         run: |
           echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
-          echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
 
       - name: Manage and Check MS Paint Process
-        shell: powershell
+        shell: pwsh
         run: |
           $Action = $env:ACTION
-          $Time = if ($env:TIME) { [datetime]$env:TIME } else { $null }
+          $Time = Get-Date
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
