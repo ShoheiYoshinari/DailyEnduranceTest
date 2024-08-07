@@ -28,8 +28,18 @@ jobs:
           echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
 
       - name: Manage and Check MS Paint Process
-        shell: powershell
+        shell: pwsh
         run: |
           $Action = $env:ACTION
-          $Time = [datetime]::ParseExact($env:TIME, 'HH:mm', $null)
+          try {
+            # TIMEの形式を検証し、適切なDateTimeオブジェクトに変換
+            if ($env:TIME -match '^\d{2}:\d{2}$') {
+              $Time = [datetime]::ParseExact($env:TIME, 'HH:mm', $null)
+            } else {
+              throw "指定されたTIMEの形式が正しくありません: $env:TIME"
+            }
+          } catch {
+            Write-Error "時間の変換エラー: $_"
+            exit 1
+          }
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
