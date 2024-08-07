@@ -1,4 +1,4 @@
-=name: Manage and Monitor MS Paint Process
+name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
