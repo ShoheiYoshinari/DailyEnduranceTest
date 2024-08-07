@@ -32,7 +32,7 @@ jobs:
             .\scripts\manage-and-check-process.ps1 -Action start
           } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
             .\scripts\manage-and-check-process.ps1 -Action stop
-          } elseif ($Action -eq "check") {
+          } elseif ($Action -eq 'check') {
             .\scripts\manage-and-check-process.ps1 -Action check
           } else {
             Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
