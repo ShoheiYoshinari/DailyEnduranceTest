@@ -13,10 +13,6 @@ on:
         description: 'Action to perform (start, stop, check)'
         required: true
         default: 'check'
-      time:
-        description: 'Time to execute the action (format: HH:mm)'
-        required: true
-        default: '00:00'
 
 jobs:
   manage-and-monitor:
@@ -28,13 +24,22 @@ jobs:
 
       - name: Run PowerShell Script to Manage and Check Process
         id: manage_and_check_process
-        shell: powershell
+        shell: pwsh
         run: |
-          $Action = "${{ github.event.inputs.action }}"
-          $Time = if ($env:TIME) { [datetime]::ParseExact('${{ github.event.inputs.time }}', 'HH:mm', $null) } else { Get-Date }
-          .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time
+          $Action = $env:ACTION
+          $currentHour = (Get-Date).Hour
+          if ($currentHour -eq 22 -and $Action -eq "start") {
+            .\path\to\your\manage-and-check-process.ps1 -Action start
+          } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
+            .\path\to\your\manage-and-check-process.ps1 -Action stop
+          } elseif ($Action -eq "check") {
+            .\path\to\your\manage-and-check-process.ps1 -Action check
+          } else {
+            Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
+            exit 1
+          }
 
-      - name: Notify Process Management
-        if: failure()  # プロセス管理に失敗した場合
+      - name: Notify Process Management Status
+        if: failure()  # ジョブが失敗した場合
         run: |
-          echo "MS Paint プロセスの管理に失敗しました。"
+          echo "プロセス管理が失敗しました。詳細はログを確認してください。"
