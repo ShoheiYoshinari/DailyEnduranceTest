@@ -24,7 +24,7 @@ jobs:
 
       - name: Run PowerShell Script to Manage and Check Process
         id: manage_and_check_process
-        shell: pwsh
+        shell: powershell
         run: |
           $Action = $env:ACTION
           $currentHour = (Get-Date).Hour
