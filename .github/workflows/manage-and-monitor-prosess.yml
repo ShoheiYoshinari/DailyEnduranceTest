@@ -2,11 +2,9 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    # 22時にプロセスを開始し、6時にプロセスを終了する設定
-    - cron: '0 22 * * *'
-    - cron: '0 6 * * *'
-    # 5分ごとにプロセスの状態を確認
-    - cron: '*/5 22-23,0-5 * * *'
+    - cron: '0 22 * * *'    # 22時にプロセスを開始
+    - cron: '0 6 * * *'     # 6時にプロセスを終了
+    - cron: '*/5 * * * *'   # 5分ごとにプロセスの状態を確認
   workflow_dispatch:
     inputs:
       action:
@@ -18,60 +16,21 @@ on:
         required: false
 
 jobs:
-  manage-and-monitor:
+  manage-process:
     runs-on: [self-hosted, windows]  # セルフホストランナーとWindows環境を指定
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Run PowerShell Script to Manage and Check Process
-        id: manage_and_check_process
+      - name: Set Environment Variables
+        run: |
+          echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
+          echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
+
+      - name: Manage and Check MS Paint Process
         shell: pwsh
         run: |
-          $currentHour = (Get-Date).Hour
-          if ($currentHour -eq 22) {
-            .\scripts\manage-and-check-process.ps1 -Action start
-          } elseif ($currentHour -eq 6) {
-            .\scripts\manage-and-check-process.ps1 -Action stop
-          } else {
-            .\scripts\manage-and-check-process.ps1 -Action check
-          }
-
-      - name: Notify on Process Status
-        if: failure()  # プロセスが終了している場合
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const message = 'MS Paintプロセスが終了しています。';
-            const { GITHUB_REPOSITORY, GITHUB_TOKEN } = process.env;
-            const octokit = require('@octokit/rest')({ auth: `token ${GITHUB_TOKEN}` });
-            octokit.issues.createComment({
-              owner: GITHUB_REPOSITORY.split('/')[0],
-              repo: GITHUB_REPOSITORY.split('/')[1],
-              issue_number: 1,  # 通知を送りたいIssue番号に変更
-              body: message
-            });
-
-      - name: Notify Process Management
-        if: success()  # プロセス管理が成功した場合
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const currentHour = new Date().getHours();
-            let message = '';
-            if (currentHour === 22) {
-              message = 'MS Paintプロセスを開始しました。';
-            } else if (currentHour === 6) {
-              message = 'MS Paintプロセスを終了しました。';
-            } else {
-              message = 'プロセス管理のスケジュール以外の時間です。';
-            }
-            const { GITHUB_REPOSITORY, GITHUB_TOKEN } = process.env;
-            const octokit = require('@octokit/rest')({ auth: `token ${GITHUB_TOKEN}` });
-            octokit.issues.createComment({
-              owner: GITHUB_REPOSITORY.split('/')[0],
-              repo: GITHUB_REPOSITORY.split('/')[1],
-              issue_number: 1,  # 通知を送りたいIssue番号に変更
-              body: message
-            });
+          $Action = $env:ACTION
+          $Time = if ($env:TIME) { [datetime]$env:TIME } else { $null }
+          .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time

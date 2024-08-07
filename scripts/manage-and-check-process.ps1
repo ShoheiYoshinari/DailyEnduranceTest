@@ -1,37 +1,48 @@
-# manage-and-check-process.ps1
-
 param (
-    [string]$Action
+  [string]$Action,
+  [datetime]$Time = $null
 )
 
-$processName = "mspaint"
-$logFile = "C:\Logs\process_status.log"
+# GitHubへの通知関数
+function Send-GitHubNotification {
+  param (
+    [string]$Message
+  )
 
-$currentTime = Get-Date
+  $repo = $env:GITHUB_REPOSITORY
+  $token = $env:GITHUB_TOKEN
+  $issue_number = 1 # 通知を送りたいIssue番号に変更
+  $uri = "https://api.github.com/repos/$repo/issues/$issue_number/comments"
 
-if ($Action -eq "start") {
+  $body = @{
+    body = $Message
+  } | ConvertTo-Json
+
+  Invoke-RestMethod -Uri $uri -Method Post -Headers @{ Authorization = "token $token" } -Body $body -ContentType "application/json"
+}
+
+try {
+  if ($Action -eq 'start' -or ($Time -eq $null -and (Get-Date).Hour -eq 22)) {
     # 22時にプロセスを開始
-    Start-Process "mspaint.exe"
-    Write-Output "[$currentTime] MS Paint プロセスを開始しました。" | Out-File -Append -FilePath $logFile
-} elseif ($Action -eq "stop") {
+    Start-Process "mspaint.exe" # 監視したいプロセスに変更
+    Write-Output "MS Paint プロセスを開始しました。"
+  } elseif ($Action -eq 'stop' -or ($Time -eq $null -and (Get-Date).Hour -eq 6)) {
     # 6時にプロセスを終了
-    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($processes) {
-        Stop-Process -Name $processName -Force
-        Write-Output "[$currentTime] MS Paint プロセスを終了しました。" | Out-File -Append -FilePath $logFile
-    } else {
-        Write-Output "[$currentTime] MS Paint プロセスは実行されていません。" | Out-File -Append -FilePath $logFile
-    }
-} elseif ($Action -eq "check") {
+    Get-Process "mspaint" -ErrorAction SilentlyContinue | Stop-Process
+    Write-Output "MS Paint プロセスを終了しました。"
+  } elseif ($Action -eq 'check') {
     # プロセスの状態を確認
-    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($processes) {
-        Write-Output "[$currentTime] MS Paint プロセスは実行中です。" | Out-File -Append -FilePath $logFile
+    $process = Get-Process "mspaint" -ErrorAction SilentlyContinue
+
+    if ($process) {
+      Write-Output "MS Paintは実行中です。"
     } else {
-        Write-Output "[$currentTime] MS Paint プロセスは終了しています。" | Out-File -Append -FilePath $logFile
-        exit 1  # エラーコードを返す
+      throw "MS Paintは実行していません。"
     }
-} else {
-    Write-Output "[$currentTime] 無効なアクションです。'start', 'stop', または 'check' を指定してください。" | Out-File -Append -FilePath $logFile
-    exit 1
+  } else {
+    throw "無効なアクションが指定されました: $Action"
+  }
+} catch {
+  Send-GitHubNotification -Message $_.Exception.Message
+  exit 1
 }
