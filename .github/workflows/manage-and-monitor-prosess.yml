@@ -25,7 +25,7 @@ jobs:
           echo "ACTION=${{ github.event.inputs.action }}" >> $GITHUB_ENV
 
       - name: Manage and Check MS Paint Process
-        shell: pwsh
+        shell: powershell
         run: |
           $Action = $env:ACTION
           $Time = Get-Date
