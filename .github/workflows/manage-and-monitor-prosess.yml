@@ -2,10 +2,8 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    # 22時にプロセスを開始し、6時にプロセスを終了する設定
     - cron: '0 22 * * *'
     - cron: '0 6 * * *'
-    # 5分ごとにプロセスの状態を確認
     - cron: '*/5 22-23,0-5 * * *'
   workflow_dispatch:
     inputs:
@@ -16,7 +14,7 @@ on:
 
 jobs:
   manage-and-monitor:
-    runs-on: [self-hosted, windows]  # セルフホストランナーとWindows環境を指定
+    runs-on: [self-hosted, windows]
 
     steps:
       - name: Checkout Repository
@@ -28,11 +26,13 @@ jobs:
         run: |
           $Action = $env:ACTION
           $currentHour = (Get-Date).Hour
+          Write-Output "[$(Get-Date)] Current Hour: $currentHour"
+          Write-Output "[$(Get-Date)] Action: $Action"
           if ($currentHour -eq 22 -and $Action -eq "start") {
             .\scripts\manage-and-check-process.ps1 -Action start
           } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
             .\scripts\manage-and-check-process.ps1 -Action stop
-          } elseif ($Action -eq 'check') {
+          } elseif ($Action -eq "check") {
             .\scripts\manage-and-check-process.ps1 -Action check
           } else {
             Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
@@ -40,6 +40,6 @@ jobs:
           }
 
       - name: Notify Process Management Status
-        if: failure()  # ジョブが失敗した場合
+        if: failure()
         run: |
           echo "プロセス管理が失敗しました。詳細はログを確認してください。"
