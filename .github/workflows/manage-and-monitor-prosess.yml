@@ -28,7 +28,7 @@ jobs:
           echo "TIME=${{ github.event.inputs.time }}" >> $GITHUB_ENV
 
       - name: Manage and Check MS Paint Process
-        shell: pwsh
+        shell: powershell
         run: |
           $Action = $env:ACTION
           $Time = if ($env:TIME) { [datetime]$env:TIME } else { $null }
