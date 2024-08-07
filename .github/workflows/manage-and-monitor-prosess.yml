@@ -3,7 +3,7 @@ name: Manage and Monitor MS Paint Process
 on:
   schedule:
     # 22時にプロセスを開始し、6時にプロセスを終了する設定
-    - cron: '0 22 * * *'
+    - cron: '0 16 * * *'
     - cron: '0 6 * * *'
     # 5分ごとにプロセスの状態を確認
     - cron: '*/5 22-23,0-5 * * *'
