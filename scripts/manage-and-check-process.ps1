@@ -1,12 +1,10 @@
-# manage-and-check-process.ps1
-
 param (
-    [string]$Action
+    [string]$Action,
+    [datetime]$Time
 )
 
 $processName = "mspaint"
 $logFile = "C:\Logs\process_status.log"
-
 $currentTime = Get-Date
 
 if ($Action -eq "start") {

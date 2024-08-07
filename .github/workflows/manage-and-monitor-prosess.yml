@@ -2,11 +2,21 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    # 16時にプロセスを開始し、6時にプロセスを終了する設定
-    - cron: '0 16 * * *'
+    # 22時にプロセスを開始し、6時にプロセスを終了する設定
+    - cron: '0 22 * * *'
     - cron: '0 6 * * *'
     # 5分ごとにプロセスの状態を確認
-    - cron: '*/5 16-23,0-5 * * *'
+    - cron: '*/5 22-23,0-5 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform (start, stop, check)'
+        required: true
+        default: 'check'
+      time:
+        description: 'Time to execute the action (format: HH:mm)'
+        required: true
+        default: '00:00'
 
 jobs:
   manage-and-monitor:
@@ -18,16 +28,11 @@ jobs:
 
       - name: Run PowerShell Script to Manage and Check Process
         id: manage_and_check_process
-        shell: pwsh
+        shell: powershell
         run: |
-          $currentHour = (Get-Date).Hour
-          if ($currentHour -eq 22) {
-            .\path\to\your\manage-and-check-process.ps1 -Action start
-          } elseif ($currentHour -eq 6) {
-            .\path\to\your\manage-and-check-process.ps1 -Action stop
-          } else {
-            .\path\to\your\manage-and-check-process.ps1 -Action check
-          }
+          $Action = "${{ github.event.inputs.action }}"
+          $Time = if ($env:TIME) { [datetime]::ParseExact('${{ github.event.inputs.time }}', 'HH:mm', $null) } else { Get-Date }
+          .\path\to\your\manage-and-check-process.ps1 -Action $Action -Time $Time
 
       - name: Notify Process Management
         if: failure()  # プロセス管理に失敗した場合
