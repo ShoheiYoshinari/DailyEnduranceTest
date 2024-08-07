@@ -1,45 +1,25 @@
-name: Manage and Monitor MS Paint Process
-
-on:
-  schedule:
-    - cron: '0 22 * * *'
-    - cron: '0 6 * * *'
-    - cron: '*/5 22-23,0-5 * * *'
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Action to perform (start, stop, check)'
-        required: true
-        default: 'check'
-
-jobs:
-  manage-and-monitor:
-    runs-on: [self-hosted, windows]
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Run PowerShell Script to Manage and Check Process
-        id: manage_and_check_process
-        shell: powershell
-        run: |
-          $Action = $env:ACTION
-          $currentHour = (Get-Date).Hour
-          Write-Output "[$(Get-Date)] Current Hour: $currentHour"
-          Write-Output "[$(Get-Date)] Action: $Action"
-          if ($currentHour -eq 22 -and $Action -eq "start") {
-            .\scripts\manage-and-check-process.ps1 -Action start
-          } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
-            .\scripts\manage-and-check-process.ps1 -Action stop
-          } elseif ($Action -eq "check") {
-            .\scripts\manage-and-check-process.ps1 -Action check
-          } else {
-            Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
-            exit 1
-          }
-
-      - name: Notify Process Management Status
-        if: failure()
-        run: |
-          echo "プロセス管理が失敗しました。詳細はログを確認してください。"
+- name: Run PowerShell Script to Manage and Check Process
+  id: manage_and_check_process
+  shell: powershell
+  run: |
+    $Action = $env:ACTION
+    $currentHour = (Get-Date).Hour
+    Write-Output "[$(Get-Date)] Current Hour: $currentHour"
+    Write-Output "[$(Get-Date)] Action: $Action"
+    
+    # デフォルトのアクション設定を追加
+    if (-not $Action) {
+        $Action = "check"
+        Write-Output "[$(Get-Date)] Actionが指定されていないため、デフォルトの 'check' を使用します。"
+    }
+    
+    if ($currentHour -eq 22 -and $Action -eq "start") {
+      .\scripts\manage-and-check-process.ps1 -Action start
+    } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
+      .\scripts\manage-and-check-process.ps1 -Action stop
+    } elseif ($Action -eq "check") {
+      .\scripts\manage-and-check-process.ps1 -Action check
+    } else {
+      Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
+      exit 1
+    }
