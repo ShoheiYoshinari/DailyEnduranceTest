@@ -28,5 +28,5 @@ jobs:
         shell: powershell
         run: |
           $Action = "${{ github.event.inputs.action || 'check' }}"
-          $Time = if (${{ github.event.inputs.time }}) { [datetime]${{ github.event.inputs.time }} } else { [datetime](Get-Date) }
+          $Time = if (${{ github.event.inputs.time }}) { [datetime]${{ github.event.inputs.time }} } else { $null }
           .\scripts\manage-and-check-process.ps1 -Action $Action -Time $Time

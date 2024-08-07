@@ -1,6 +1,6 @@
 param (
   [string]$Action,
-  [datetime]$Time = (Get-Date)
+  [datetime]$Time = $null
 )
 
 # GitHubへの通知関数
@@ -22,11 +22,11 @@ function Send-GitHubNotification {
 }
 
 try {
-  if ($Action -eq 'start' -or ($Time.Hour -eq 22)) {
+  if ($Action -eq 'start' -or ($Time -eq $null -and (Get-Date).Hour -eq 22)) {
     # 22時にプロセスを開始
     Start-Process "mspaint.exe" # 監視したいプロセスに変更
     Write-Output "MS Paint プロセスを開始しました。"
-  } elseif ($Action -eq 'stop' -or ($Time.Hour -eq 6)) {
+  } elseif ($Action -eq 'stop' -or ($Time -eq $null -and (Get-Date).Hour -eq 6)) {
     # 6時にプロセスを終了
     Get-Process "mspaint" -ErrorAction SilentlyContinue | Stop-Process
     Write-Output "MS Paint プロセスを終了しました。"
