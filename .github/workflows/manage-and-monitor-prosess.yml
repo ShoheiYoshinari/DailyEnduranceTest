@@ -11,6 +11,10 @@ on:
         description: 'Action to perform (start, stop, check)'
         required: true
         default: 'check'
+        option:
+          -start
+          -stop
+          -check
 
 jobs:
   manage-and-monitor:
