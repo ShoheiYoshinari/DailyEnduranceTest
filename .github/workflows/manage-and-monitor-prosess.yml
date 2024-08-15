@@ -33,7 +33,8 @@ jobs:
           Write-Output "[$(Get-Date)] Is Manual Trigger: $IsManualTrigger"
           
           # デフォルトのアクション設定
-          if (-not $Action) {
+          if (-not $Action) 
+          {
             $Action = "check"
             Write-Output "[$(Get-Date)] Actionが指定されていないため、デフォルトの 'check' を使用します。"
           }
@@ -44,9 +45,9 @@ jobs:
             .\scripts\manage-and-check-process.ps1 -Action $Action
           } else {
             # スケジュール実行の場合は時間帯によって制御
-            if ($currentHour -eq 22 -and $Action -eq "start") {
+            if ($Action -eq "start") {
               .\scripts\manage-and-check-process.ps1 -Action start
-            } elseif ($currentHour -eq 6 -and $Action -eq "stop") {
+            } elseif ($Action -eq "stop") {
               .\scripts\manage-and-check-process.ps1 -Action stop
             } elseif ($Action -eq "check") {
               .\scripts\manage-and-check-process.ps1 -Action check
