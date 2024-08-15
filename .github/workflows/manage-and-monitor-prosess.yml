@@ -11,12 +11,7 @@ on:
         description: 'Action to perform (start, stop, check)'
         required: true
         default: 'check'
-        type: choice
-        option:
-          -start
-          -stop
-          -check
-
+        type: string
 jobs:
   manage-and-monitor:
     runs-on: [self-hosted, windows]
