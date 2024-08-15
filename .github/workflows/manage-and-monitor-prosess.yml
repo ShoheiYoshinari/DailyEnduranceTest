@@ -24,7 +24,7 @@ jobs:
         id: manage_and_check_process
         shell: powershell
         run: |
-          $Action = $env:ACTION
+          $Action = $env.INPUT_ACTION
           $currentHour = (Get-Date).Hour
           Write-Output "[$(Get-Date)] Current Hour: $currentHour"
           Write-Output "[$(Get-Date)] Action: $Action"
