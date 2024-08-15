@@ -2,9 +2,8 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    - cron: '0 22 * * *'
-    - cron: '0 6 * * *'
-    - cron: '*/5 22-23,0-5 * * *'
+    - cron: '0 22 * * *'  # 毎日22:00に実行
+    - cron: '0 6 * * *'   # 毎日6:00に実行
   workflow_dispatch:
     inputs:
       action:
@@ -23,38 +22,40 @@ jobs:
       - name: Run PowerShell Script to Manage and Check Process
         id: manage_and_check_process
         shell: powershell
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           $Action = $env:INPUT_ACTION
           $currentHour = (Get-Date).Hour
-          $IsManualTrigger = ${{ github.event_name == 'workflow_dispatch' }}
+          $IsManualTrigger = $env:GITHUB_EVENT_NAME -eq 'workflow_dispatch'
           
           Write-Output "[$(Get-Date)] Current Hour: $currentHour"
           Write-Output "[$(Get-Date)] Action: $Action"
           Write-Output "[$(Get-Date)] Is Manual Trigger: $IsManualTrigger"
           
           # デフォルトのアクション設定
-          if (-not $Action) 
-          {
+          if (-not $Action) {
             $Action = "check"
             Write-Output "[$(Get-Date)] Actionが指定されていないため、デフォルトの 'check' を使用します。"
           }
 
-          # 手動実行かどうかを確認
+          # 手動実行の場合は時間制限なしで指定されたアクションを実行
           if ($IsManualTrigger) {
-            # 手動実行の場合は時間制限なしで実行
             .\scripts\manage-and-check-process.ps1 -Action $Action
           } else {
-            # スケジュール実行の場合は時間帯によって制御
-            if ($Action -eq "start") {
-              .\scripts\manage-and-check-process.ps1 -Action start
-            } elseif ($Action -eq "stop") {
-              .\scripts\manage-and-check-process.ps1 -Action stop
-            } elseif ($Action -eq "check") {
-              .\scripts\manage-and-check-process.ps1 -Action check
+            # スケジュール実行の場合、時間に応じてアクションを設定
+            if ($currentHour -eq 22) {
+              $Action = "start"
+              Write-Output "[$(Get-Date)] Setting Action to 'start' for 22:00."
+            } elseif ($currentHour -eq 6) {
+              $Action = "stop"
+              Write-Output "[$(Get-Date)] Setting Action to 'stop' for 06:00."
             } else {
-              Write-Output "[$(Get-Date)] 無効なアクションまたはスケジュールです。"
+              Write-Output "[$(Get-Date)] Invalid time for scheduled actions."
               exit 1
             }
+            
+            .\scripts\manage-and-check-process.ps1 -Action $Action
           }
 
       - name: Notify Process Management Status
