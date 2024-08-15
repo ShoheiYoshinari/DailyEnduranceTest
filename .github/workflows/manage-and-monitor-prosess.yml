@@ -12,6 +12,7 @@ on:
         required: true
         default: 'check'
         type: string
+
 jobs:
   manage-and-monitor:
     runs-on: [self-hosted, windows]
@@ -25,8 +26,9 @@ jobs:
         shell: powershell
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+          INPUT_ACTION: ${{ github.event.inputs.action }}
         run: |
-          $Action = $github.event.inputs.action
+          $Action = $env:INPUT_ACTION
           $currentHour = (Get-Date).Hour
           $IsManualTrigger = $env:GITHUB_EVENT_NAME -eq 'workflow_dispatch'
           
