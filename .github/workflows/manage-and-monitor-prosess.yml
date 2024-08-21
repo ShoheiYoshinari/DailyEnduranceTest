@@ -1,10 +1,6 @@
-name: Manage and Monitor MS Paint Process
+name: Manage and Monitor Process
 
 on:
-  #schedule:
-    #- cron: '0 22 * * *'  # 毎日22:00に実行
-    #- cron: '0 6 * * *'   # 毎日6:00に実行
-    #- cron: '*/5 22-23,0-5 * * *'
   workflow_dispatch:
     inputs:
       action:
@@ -20,47 +16,38 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          ref: develop
 
-      - name: Run PowerShell Script to Manage and Check Process
-        id: manage_and_check_process
-        shell: powershell
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          INPUT_ACTION: ${{ github.event.inputs.action }}
+      - name: Pull Latest Changes
         run: |
-          $Action = $env:INPUT_ACTION
-          $currentHour = (Get-Date).Hour
-          $IsManualTrigger = $env:GITHUB_EVENT_NAME -eq 'workflow_dispatch'
-          
-          Write-Output "[$(Get-Date)] Current Hour: $currentHour"
-          Write-Output "[$(Get-Date)] Action: $Action"
-          Write-Output "[$(Get-Date)] Is Manual Trigger: $IsManualTrigger"
-          
-          # デフォルトのアクション設定
-          if (-not $Action) {
-            $Action = "check"
-            Write-Output "[$(Get-Date)] Actionが指定されていないため、デフォルトの 'check' を使用します。"
-          }
+          git pull origin develop
+        shell: bash
 
-          # 手動実行の場合は時間制限なしで指定されたアクションを実行
-          if ($IsManualTrigger) {
-            .\scripts\manage-and-check-process.ps1 -Action $Action
+      - name: Run メキキオール (Send Shortcut Keys)
+        run: |
+          powershell -ExecutionPolicy Bypass -File "scripts/send_shortcut_keys.ps1"
+        shell: powershell
+
+      - name: Wait for 5 Minutes
+        run: |
+          Write-Output "5分間待機中..."
+          Start-Sleep -Seconds 300
+        shell: powershell
+
+      - name: Check Specific Process
+        id: check_process
+        run: |
+          # 特定のプロセスが実行中か確認します
+          $process = Get-Process -Name "Hutzper.Library" -ErrorAction SilentlyContinue
+          if ($process) {
+            Write-Output "Hutzper.Library は実行中です。"
           } else {
-            # スケジュール実行の場合、時間に応じてアクションを設定
-            if ($currentHour -eq 22) {
-              $Action = "start"
-              Write-Output "[$(Get-Date)] Setting Action to 'start' for 22:00."
-            } elseif ($currentHour -eq 6) {
-              $Action = "stop"
-              Write-Output "[$(Get-Date)] Setting Action to 'stop' for 06:00."
-            } else {
-              Write-Output "[$(Get-Date)] Invalid time for scheduled actions."
-              exit 1
-            }
-            
-            .\scripts\manage-and-check-process.ps1 -Action $Action
+            Write-Output "Hutzper.Library は停止しています。"
+            exit 1
           }
+        shell: powershell
 
-      - name: Notify Process Management Status
+      - name: Handle Failure
         if: failure()
-        run: echo "プロセス管理が失敗しました。詳細はログを確認してください。"
+        run: echo "プロセスが停止しているため、ジョブが失敗しました。"
