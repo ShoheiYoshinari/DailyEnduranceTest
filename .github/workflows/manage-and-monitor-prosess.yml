@@ -16,6 +16,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          ref: develop
+
+      - name: Update Git Remote URL
+        run: |
+          git remote set-url origin https://github.com/yoshinari0508/DailyEnduranceTest.git
+        shell: bash
 
       - name: Pull Latest Changes from develop Branch
         run: |
