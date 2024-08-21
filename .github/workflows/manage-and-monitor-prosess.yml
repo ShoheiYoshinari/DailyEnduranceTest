@@ -16,11 +16,15 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          ref: develop
+          # GitHub Actions のシークレットで SSH 鍵の設定を行います
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Update Git Remote URL
-        run: |
-          git remote set-url origin https://github.com/yoshinari0508/DailyEnduranceTest.git
-        shell: bash
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Pull Latest Changes from develop Branch
         run: |
