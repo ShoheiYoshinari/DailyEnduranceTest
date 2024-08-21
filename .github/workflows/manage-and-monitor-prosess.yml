@@ -19,10 +19,18 @@ jobs:
         with:
           ref: develop
 
-      - name: Pull Latest Changes
+      - name: Pull Latest Changes from develop Branch
         run: |
+          # PowerShell スクリプトを実行するためのディレクトリを設定
+          $repoDir = "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
+
+          # 指定したディレクトリに移動
+          Set-Location -Path $repoDir
+
+          # リモートリポジトリから develop ブランチをフェッチしてプル
+          git fetch origin develop
           git pull origin develop
-        shell: bash
+        shell: powershell
 
       - name: Run メキキオール (Send Shortcut Keys)
         run: |
@@ -38,7 +46,7 @@ jobs:
       - name: Check Specific Process
         id: check_process
         run: |
-          # 特定のプロセスが実行中か確認します
+          # Visual Studio のプロセスが実行中か確認します（プロセス名は適宜変更）
           $process = Get-Process -Name "Hutzper.Library" -ErrorAction SilentlyContinue
           if ($process) {
             Write-Output "Hutzper.Library は実行中です。"
