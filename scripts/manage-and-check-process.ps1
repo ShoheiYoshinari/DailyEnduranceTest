@@ -5,8 +5,8 @@ param (
 switch ($Action.ToLower()) {
     "start" {
         Write-Output "[$(Get-Date)] MS Paintを起動します..."
-        # 非同期でMS Paintを起動します
-        Start-Process "mspaint.exe" -WindowStyle Normal
+        # 非同期でMS Paintを起動し、プロセスをデタッチ
+        Start-Process "mspaint.exe" -WindowStyle Normal -PassThru | Out-Null
     }
     "stop" {
         $process = Get-Process -Name "mspaint" -ErrorAction SilentlyContinue
