@@ -45,21 +45,21 @@ jobs:
           powershell -ExecutionPolicy Bypass -File "scripts/send_shortcut_keys.ps1"
         shell: powershell
 
-      - name: Wait for 5 Minutes
+      - name: Wait for 30 seconds
         run: |
-          Write-Output "5分間待機中..."
-          Start-Sleep -Seconds 300
+          Write-Output "30秒間待機中..."
+          Start-Sleep -Seconds 30
         shell: powershell
 
       - name: Check Specific Process
         id: check_process
         run: |
           # Visual Studio のプロセスが実行中か確認します（プロセス名は適宜変更）
-          $process = Get-Process -Name "Hutzper.Library" -ErrorAction SilentlyContinue
+          $process = Get-Process -Name "Hutzper.Project.Mekiki" -ErrorAction SilentlyContinue
           if ($process) {
-            Write-Output "Hutzper.Library は実行中です。"
+            Write-Output "Hutzper.Project.Mekiki は実行中です。"
           } else {
-            Write-Output "Hutzper.Library は停止しています。"
+            Write-Output "Hutzper.Project.Mekiki は停止しています。"
             exit 1
           }
         shell: powershell
