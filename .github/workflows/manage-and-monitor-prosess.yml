@@ -45,10 +45,10 @@ jobs:
           powershell -ExecutionPolicy Bypass -File "scripts/send_shortcut_keys.ps1"
         shell: powershell
 
-      - name: Wait for 30 seconds
+      - name: Wait for 2 minutes
         run: |
-          Write-Output "30秒間待機中..."
-          Start-Sleep -Seconds 30
+          Write-Output "120秒間待機中..."
+          Start-Sleep -Seconds 120
         shell: powershell
 
       - name: Check Specific Process
