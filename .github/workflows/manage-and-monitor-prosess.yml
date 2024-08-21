@@ -16,28 +16,29 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          ref: develop
+
+        #with:
+          #ref: develop
           # GitHub Actions のシークレットで SSH 鍵の設定を行います
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          #ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #- name: Setup SSH
+        #uses: webfactory/ssh-agent@v0.7.0
+        #with:
+          #ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Pull Latest Changes from develop Branch
-        run: |
-          # PowerShell スクリプトを実行するためのディレクトリを設定
-          $repoDir = "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
+      #- name: Pull Latest Changes from develop Branch
+        #run: |
+          ## PowerShell スクリプトを実行するためのディレクトリを設定
+          #$repoDir = "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
 
-          # 指定したディレクトリに移動
-          Set-Location -Path $repoDir
+          ## 指定したディレクトリに移動
+          #Set-Location -Path $repoDir
 
-          # リモートリポジトリから develop ブランチをフェッチしてプル
-          git fetch origin develop
-          git pull origin develop
-        shell: powershell
+          ## リモートリポジトリから develop ブランチをフェッチしてプル
+          #git fetch origin develop
+          #git pull origin develop
+        #shell: powershell
 
       - name: Run メキキオール (Send Shortcut Keys)
         run: |
