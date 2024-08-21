@@ -1,69 +1,61 @@
 name: Manage and Monitor Process
 
 on:
+  schedule:
+    # 毎日22:00にプロセスを開始するジョブを実行
+    - cron: '0 22 * * *'
+    # 毎日22:10から6:00までの間で10分ごとにプロセスの状態を確認するジョブを実行
+    - cron: '*/10 22-23,0-5 * * *'
+    # 毎日6:00にプロセスを終了するジョブを実行
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       action:
-        description: 'Action to perform (start, stop, check)'
+        description: 'Action to perform (start, check, stop)'
         required: true
         default: 'check'
         type: string
 
 jobs:
-  manage-and-monitor:
+  start-process:
+    if: github.event.schedule.cron == '0 22 * * *' || github.event.inputs.action == 'start'
     runs-on: [self-hosted, windows]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-        #with:
-          #ref: develop
-          # GitHub Actions のシークレットで SSH 鍵の設定を行います
-          #ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      #- name: Setup SSH
-        #uses: webfactory/ssh-agent@v0.7.0
-        #with:
-          #ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      #- name: Pull Latest Changes from develop Branch
-        #run: |
-          ## PowerShell スクリプトを実行するためのディレクトリを設定
-          #$repoDir = "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
-
-          ## 指定したディレクトリに移動
-          #Set-Location -Path $repoDir
-
-          ## リモートリポジトリから develop ブランチをフェッチしてプル
-          #git fetch origin develop
-          #git pull origin develop
-        #shell: powershell
-
       - name: Run メキキオール (Send Shortcut Keys)
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/send_shortcut_keys.ps1"
         shell: powershell
 
-      - name: Wait for 2 minutes
-        run: |
-          Write-Output "120秒間待機中..."
-          Start-Sleep -Seconds 120
-        shell: powershell
+  check-process:
+    if: github.event.schedule.cron == '*/10 22-23,0-5 * * *' || github.event.inputs.action == 'check'
+    runs-on: [self-hosted, windows]
 
-      - name: Check Specific Process
-        id: check_process
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Check Process
         run: |
-          # Visual Studio のプロセスが実行中か確認します（プロセス名は適宜変更）
-          $process = Get-Process -Name "Hutzper.Project.Mekiki" -ErrorAction SilentlyContinue
-          if ($process) {
-            Write-Output "Hutzper.Project.Mekiki は実行中です。"
-          } else {
-            Write-Output "Hutzper.Project.Mekiki は停止しています。"
-            exit 1
-          }
+          powershell -ExecutionPolicy Bypass -File "scripts/check_process.ps1"
         shell: powershell
 
       - name: Handle Failure
         if: failure()
         run: echo "プロセスが停止しているため、ジョブが失敗しました。"
+
+  stop-process:
+    if: github.event.schedule.cron == '0 6 * * *' || github.event.inputs.action == 'stop'
+    runs-on: [self-hosted, windows]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Stop メキキオール
+        run: |
+          powershell -ExecutionPolicy Bypass -File "scripts/stop_process.ps1"
+        shell: powershell
