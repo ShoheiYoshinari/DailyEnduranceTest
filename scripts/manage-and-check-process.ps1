@@ -2,30 +2,33 @@ param (
     [string]$Action
 )
 
-$processName = "mspaint"
-$currentTime = Get-Date
-
-if ($Action -eq "start") {
-    Start-Process "mspaint.exe"
-    Write-Output "[$currentTime] MS Paint プロセスを開始しました。"
-} elseif ($Action -eq "stop") {
-    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($processes) {
-        Stop-Process -Name $processName -Force
-        Write-Output "[$currentTime] MS Paint プロセスを終了しました。"
-    } else {
-        Write-Output "[$currentTime] MS Paint プロセスは実行されていません。"
+switch ($Action.ToLower()) {
+    "start" {
+        Write-Output "[$(Get-Date)] MS Paintを起動します..."
+        # 非同期でMS Paintを起動します
+        Start-Process "mspaint.exe" -WindowStyle Normal
+    }
+    "stop" {
+        $process = Get-Process -Name "mspaint" -ErrorAction SilentlyContinue
+        if ($process) {
+            Write-Output "[$(Get-Date)] MS Paintを終了します..."
+            Stop-Process -Name "mspaint" -Force
+        } else {
+            Write-Output "[$(Get-Date)] MS Paintは実行されていません。"
+            exit 1
+        }
+    }
+    "check" {
+        $process = Get-Process -Name "mspaint" -ErrorAction SilentlyContinue
+        if ($process) {
+            Write-Output "[$(Get-Date)] MS Paintは実行中です。"
+        } else {
+            Write-Output "[$(Get-Date)] MS Paintは実行されていません。"
+            exit 1
+        }
+    }
+    default {
+        Write-Output "[$(Get-Date)] 無効なアクションが指定されました: $Action。'start'、'stop'、または 'check' を使用してください。"
         exit 1
     }
-} elseif ($Action -eq "check") {
-    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($processes) {
-        Write-Output "[$currentTime] MS Paint プロセスは実行中です。"
-    } else {
-        Write-Output "[$currentTime] MS Paint プロセスは終了しています。"
-        exit 1
-    }
-} else {
-    Write-Output "[$currentTime] 無効なアクションです。'start', 'stop', または 'check' を指定してください。"
-    exit 1
 }
