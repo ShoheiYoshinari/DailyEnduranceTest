@@ -27,7 +27,7 @@ jobs:
 
       - name: Run メキキオール (Send Shortcut Keys)
         run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/send_shortcut_keys.ps1"
+          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
 
   check-process:
