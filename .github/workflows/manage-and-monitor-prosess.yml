@@ -17,38 +17,37 @@ on:
         type: string
 
 jobs:
-  start-process:
-    if: github.event.schedule.cron == '0 22 * * *' || github.event.inputs.action == 'start'
+  manage-process:
     runs-on: [self-hosted, windows]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Pull Latest Changes from develop Branch
+      - name: Prepare Project Directory
         run: |
-          # プロジェクトディレクトリに移動
-          Set-Location -Path "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
+          $projectDir = "C:\CSharp.Hutzper.Library"
+          $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
           
-          # develop ブランチから最新の変更をプル
-          git checkout develop
-          git pull origin develop
+          # プロジェクトディレクトリが存在するかチェック
+          if (-Not (Test-Path $projectDir)) {
+            # ディレクトリが存在しない場合はリポジトリをクローン
+            git clone $repositoryUrl $projectDir
+          } else {
+            # ディレクトリが存在する場合は最新の変更をプル
+            Set-Location -Path $projectDir
+            git pull origin develop
+          }
         shell: powershell
 
-      - name: Run Start Process Script
+      - name: Perform Action
+        if: github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *'
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
 
-  check-process:
-    if: github.event.schedule.cron == '*/10 22-23,0-5 * * *' || github.event.inputs.action == 'check'
-    runs-on: [self-hosted, windows]
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
       - name: Check Process
+        if: github.event.inputs.action == 'check' || github.event.schedule.cron == '*/10 22-23,0-5 * * *'
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/check_process.ps1"
         shell: powershell
@@ -57,15 +56,8 @@ jobs:
         if: failure()
         run: echo "プロセスが停止しているため、ジョブが失敗しました。"
 
-  stop-process:
-    if: github.event.schedule.cron == '0 6 * * *' || github.event.inputs.action == 'stop'
-    runs-on: [self-hosted, windows]
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
       - name: Stop Process Script
+        if: github.event.inputs.action == 'stop' || github.event.schedule.cron == '0 6 * * *'
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/stop_process.ps1"
         shell: powershell
