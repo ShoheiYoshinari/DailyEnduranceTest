@@ -25,7 +25,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Run メキキオール (Send Shortcut Keys)
+      - name: Pull Latest Changes from develop Branch
+        run: |
+          # プロジェクトディレクトリに移動
+          Set-Location -Path "C:\Users\shohei.yoshinari_hut\CSharp.Hutzper.Library"
+          
+          # develop ブランチから最新の変更をプル
+          git checkout develop
+          git pull origin develop
+        shell: powershell
+
+      - name: Run Start Process Script
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
@@ -55,7 +65,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Stop メキキオール
+      - name: Stop Process Script
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/stop_process.ps1"
         shell: powershell
