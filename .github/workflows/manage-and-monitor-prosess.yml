@@ -2,9 +2,9 @@ name: Manage and Monitor MS Paint Process
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 毎日22:00に実行
-    - cron: '0 6 * * *'   # 毎日6:00に実行
-    - cron: '*/5 22-23,0-5 * * *'
+    #- cron: '0 22 * * *'  # 毎日22:00に実行
+    #- cron: '0 6 * * *'   # 毎日6:00に実行
+    #- cron: '*/5 22-23,0-5 * * *'
   workflow_dispatch:
     inputs:
       action:

@@ -1,0 +1,49 @@
+name: Check Process Status After Develop Git Pull
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-process-status:
+    runs-on: [self-hosted, windows]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: develop  # develop ブランチをチェックアウト
+
+      - name: Pull Latest Changes from Develop Branch
+        run: |
+          git pull origin develop
+
+      - name: Open File
+        id: open_file
+        shell: powershell
+        run: |
+          $filePath = "C:\path\to\your\file\メキキオール"  # メキキオールファイルのパスを指定
+          Start-Process $filePath -PassThru | Out-File -FilePath "process_id.txt" -Append
+          Write-Output "[$(Get-Date)] File '$filePath' opened."
+
+      - name: Wait for 5 Minutes
+        run: |
+          Start-Sleep -Seconds 300
+
+      - name: Check Process Status
+        id: check_process
+        shell: powershell
+        run: |
+          $processIdFile = "process_id.txt"
+          $processId = Get-Content $processIdFile
+          $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+          if ($process) {
+            Write-Output "[$(Get-Date)] Process with ID $processId is running."
+            exit 0
+          } else {
+            Write-Output "[$(Get-Date)] Process with ID $processId is not running."
+            exit 1
+          }
+
+      - name: Notify Process Management Status
+        if: failure()
+        run: echo "プロセスが終了しています。アクションの結果にエラーがあります。"
