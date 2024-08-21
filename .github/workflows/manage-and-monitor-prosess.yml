@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          ref: develop
 
       - name: Pull Latest Changes from develop Branch
         run: |
