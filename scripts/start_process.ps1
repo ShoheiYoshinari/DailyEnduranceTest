@@ -1,4 +1,5 @@
 #ショートカットキーを用いてPower Automateを実行
+<#
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -26,3 +27,22 @@ public class SendKeys {
 "@
 
 [SendKeys]::SendShortcut()
+#>
+
+Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -Wait
+# プロジェクトをビルド
+Add-Type -AssemblyName System.Windows.Forms
+
+[System.Windows.Forms.SendKeys]::SendWait("{F5}")
+
+# check_processを実行
+# 現在のスクリプトのディレクトリを取得
+$scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
+# 同じフォルダ内にある別のスクリプトを実行
+& "$scriptDirectory\check_process.ps1"
+
+
+
+
+
+
