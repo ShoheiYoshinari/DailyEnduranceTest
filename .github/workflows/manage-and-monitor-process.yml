@@ -34,16 +34,10 @@ jobs:
           }
         shell: powershell
 
-      - name: Check Process Readiness
+      - name: Perform Action
         if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
         run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/start_process_ready.ps1"
-        shell: powershell
-
-      - name: Perform Action - Send F5 Key
-        if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
-        run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/start_perform_action.ps1"
+          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
 
       - name: Check Process
