@@ -30,17 +30,13 @@ public class SendKeys {
 #>
 Add-Type -AssemblyName System.Windows.Forms
 
-# プロセスを開始
-Start-Process "devenv.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru -Wait
+$process = Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
 Start-Sleep -Seconds 30
-# F5 を送信
 [System.Windows.Forms.SendKeys]::SendWait("{F5}")
 Start-Sleep -Seconds 30
-# check_processを実行
-# 現在のスクリプトのディレクトリを取得
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
-# 同じフォルダ内にある別のスクリプトを実行
 & "$scriptDirectory\check_process.ps1"
+
 
 
 
