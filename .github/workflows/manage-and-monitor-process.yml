@@ -50,7 +50,7 @@ jobs:
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
           Start-Sleep -Seconds 30
           $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
-          & "$scriptDirectory\check_process.ps1"
+          & "$scripts\check_process.ps1"
 
         shell: powershell
 
