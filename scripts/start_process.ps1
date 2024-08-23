@@ -1,3 +1,4 @@
+#ショートカットキーを用いてPower Automateを実行
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;

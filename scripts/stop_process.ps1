@@ -1,10 +1,7 @@
-# プロセス名を指定します
+# Visual Studio のプロセスが実行中か確認します（プロセス名は適宜変更）
 $processName = "Hutzper.Project.Mekiki"
-
-# 指定したプロセスを取得します
 $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
 
-# プロセスが見つかった場合、終了します
 if ($processes) {
     Write-Output "プロセス '$processName' が見つかりました。終了します..."
     foreach ($process in $processes) {
