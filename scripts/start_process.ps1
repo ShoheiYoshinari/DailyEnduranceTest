@@ -31,27 +31,10 @@ public class SendKeys {
 
 # プロセスを開始
 Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
-
-# プロセスが起動し、ウィンドウが表示されるまで待機
-$timeout = 60 # タイムアウトの秒数
-$startTime = Get-Date
-$windowTitle = "Hutzper.Library" # 確認したいウィンドウタイトル
-
-while ((Get-Date) -lt $startTime.AddSeconds($timeout)) {
-    $processList = Get-Process | Where-Object { $_.MainWindowTitle -eq $windowTitle }
-    if ($processList) {
-        Write-Output "プロセスの準備が完了しました。次の処理に進みます。"
-        # F5 を送信
-        [System.Windows.Forms.SendKeys]::SendWait("{F5}")
-        break
-    }
-    Start-Sleep -Seconds 1
-}
-
-if (-Not $processList) {
-    Write-Output "タイムアウトしました。ウィンドウタイトルが見つかりませんでした。"
-}
-
+Start-Sleep -Seconds 30
+# F5 を送信
+[System.Windows.Forms.SendKeys]::SendWait("{F5}")
+Start-Sleep -Seconds 30
 # check_processを実行
 # 現在のスクリプトのディレクトリを取得
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
