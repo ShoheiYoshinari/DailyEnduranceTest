@@ -2,12 +2,9 @@ name: Manage and Monitor Process
 
 on:
   schedule:
-    # 毎日22:00にプロセスを開始するジョブを実行
-    - cron: '0 22 * * *'
-    # 毎日22:10から6:00までの間で10分ごとにプロセスの状態を確認するジョブを実行
-    - cron: '*/10 22-23,0-5 * * *'
-    # 毎日6:00にプロセスを終了するジョブを実行
-    - cron: '0 6 * * *'
+    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
+    - cron: '*/10 22-23,0-5 * * *'  # 毎日22:10から6:00まで10分ごとに状態を確認
+    - cron: '0 6 * * *'  # 毎日6:00にプロセスを終了
   workflow_dispatch:
     inputs:
       action:
@@ -29,42 +26,33 @@ jobs:
           $projectDir = "C:\CSharp.Hutzper.Library"
           $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
           
-          # プロジェクトディレクトリが存在するかチェック
           if (-Not (Test-Path $projectDir)) {
-            # ディレクトリが存在しない場合はリポジトリをクローン
             git clone $repositoryUrl $projectDir
           } else {
-            # ディレクトリが存在する場合は最新の変更をプル
             Set-Location -Path $projectDir
             git pull origin develop
           }
         shell: powershell
 
       - name: Perform Action
-        if: github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *'
+        if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
         run: |
-          # powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
-          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
-          Start-Sleep -Seconds 30
-          Add-Type -AssemblyName System.Windows.Forms
-          [System.Windows.Forms.SendKeys]::SendWait("{F5}")
-          Start-Sleep -Seconds 30
-          & (Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "scripts\check_process.ps1")
-
+          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
 
       - name: Check Process
-        if: github.event.inputs.action == 'check' || github.event.schedule.cron == '*/10 22-23,0-5 * * *'
+        if: ${{ github.event.inputs.action == 'check' || github.event.schedule.cron == '*/10 22-23,0-5 * * *' }}
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/check_process.ps1"
         shell: powershell
 
       - name: Handle Failure
         if: failure()
-        run: echo "プロセスが停止しているため、ジョブが失敗しました。"
+        run: |
+          echo "プロセスが停止しているため、ジョブが失敗しました。"
 
-      - name: Stop Process Script
-        if: github.event.inputs.action == 'stop' || github.event.schedule.cron == '0 6 * * *'
+      - name: Stop Process
+        if: ${{ github.event.inputs.action == 'stop' || github.event.schedule.cron == '0 6 * * *' }}
         run: |
           powershell -ExecutionPolicy Bypass -File "scripts/stop_process.ps1"
         shell: powershell

@@ -1,5 +1,4 @@
 #ショートカットキーを用いてPower Automateを実行
-<#
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -25,17 +24,17 @@ public class SendKeys {
     }
 }
 "@
-
 [SendKeys]::SendShortcut()
-#>
-Add-Type -AssemblyName System.Windows.Forms
 
+<#
+Add-Type -AssemblyName System.Windows.Forms
 $process = Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
 Start-Sleep -Seconds 30
 [System.Windows.Forms.SendKeys]::SendWait("{F5}")
 Start-Sleep -Seconds 30
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 & "$scriptDirectory\check_process.ps1"
+#>
 
 
 
