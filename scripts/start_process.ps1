@@ -28,6 +28,7 @@ public class SendKeys {
 
 [SendKeys]::SendShortcut()
 #>
+Add-Type -AssemblyName System.Windows.Forms
 
 # プロセスを開始
 Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
