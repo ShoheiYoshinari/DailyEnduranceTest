@@ -31,7 +31,7 @@ public class SendKeys {
 Add-Type -AssemblyName System.Windows.Forms
 
 # プロセスを開始
-Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
+Start-Process "devenv.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru -Wait
 Start-Sleep -Seconds 30
 # F5 を送信
 [System.Windows.Forms.SendKeys]::SendWait("{F5}")
