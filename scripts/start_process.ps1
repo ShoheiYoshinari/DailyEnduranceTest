@@ -29,10 +29,9 @@ public class SendKeys {
 [SendKeys]::SendShortcut()
 #>
 
-Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -Wait
+Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
 # プロジェクトをビルド
 Add-Type -AssemblyName System.Windows.Forms
-
 [System.Windows.Forms.SendKeys]::SendWait("{F5}")
 
 # check_processを実行
