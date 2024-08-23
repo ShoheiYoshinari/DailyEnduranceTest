@@ -43,7 +43,14 @@ jobs:
       - name: Perform Action
         if: github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *'
         run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
+          # powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
+          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -PassThru
+          Start-Sleep -Seconds 30
+          [System.Windows.Forms.SendKeys]::SendWait("{F5}")
+          Start-Sleep -Seconds 30
+          $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
+          & "$scriptDirectory\check_process.ps1"
+
         shell: powershell
 
       - name: Check Process
