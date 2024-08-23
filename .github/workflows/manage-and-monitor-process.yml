@@ -34,10 +34,16 @@ jobs:
           }
         shell: powershell
 
-      - name: Perform Action
+      - name: Check Process Readiness
         if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
         run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
+          powershell -ExecutionPolicy Bypass -File "scripts/start_process_ready.ps1"
+        shell: powershell
+
+      - name: Perform Action - Send F5 Key
+        if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
+        run: |
+          powershell -ExecutionPolicy Bypass -File "scripts/start_perform_action.ps1"
         shell: powershell
 
       - name: Check Process
@@ -50,6 +56,7 @@ jobs:
         if: failure()
         run: |
           echo "プロセスが停止しているため、ジョブが失敗しました。"
+        shell: powershell
 
       - name: Stop Process
         if: ${{ github.event.inputs.action == 'stop' || github.event.schedule.cron == '0 6 * * *' }}
