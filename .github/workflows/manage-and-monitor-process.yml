@@ -2,9 +2,9 @@ name: Manage and Monitor Process
 
 on:
   schedule:
-    #- cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
+    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
     #- cron: '*/10 22-23,0-5 * * *'  # 毎日22:10から6:00まで10分ごとに状態を確認
-    #- cron: '0 6 * * *'  # 毎日6:00にプロセスを終了
+    - cron: '0 6 * * *'  # 毎日6:00にプロセスを終了
   workflow_dispatch:
     inputs:
       action:
