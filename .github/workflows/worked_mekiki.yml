@@ -92,20 +92,21 @@ jobs:
             }
           }
 
+          # Directly check if the process is alive
+          $processName = "Hutzper.Project.Mekiki"
           while ((Get-Date) -lt $endTime) {
             Start-Sleep -Seconds 5  # Recheck every 5 seconds
 
             # Recheck the process
-            $isAlive = .\scripts\check_process.ps1
-            if ($isAlive -eq $false) {
-              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              Write-Output "The process stopped at $deadTime."
-              exit 1  # Return error code to notify GitHub Actions
+            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+            if (-Not $process) {
+            $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            Write-Output "The process stopped at $deadTime."
+            exit 1  # Return error code to notify GitHub Actions
             }
           }
-
-          Write-Output "The process stayed alive until the specified end time. Ending session."
-          exit 0
+            Write-Output "The process stayed alive until the specified end time. Ending session."
+            exit 0
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
