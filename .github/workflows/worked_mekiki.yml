@@ -75,7 +75,7 @@ jobs:
     steps:
       - name: Check Process Every 5 Seconds
         run: |
-          if (${{ github.event_name }} == 'schedule') {
+          if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
             # During automatic execution (starts at 22:00)
             $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
@@ -104,6 +104,9 @@ jobs:
             }
           }
           Write-Output "The process stayed alive until the specified end time. Ending session."
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        shell: powershell
 
   finalize:
     needs: retry-loop
@@ -117,3 +120,4 @@ jobs:
       - name: Notify GitHub Actions of Result
         run: |
           Write-Output "Process result: Success" # Display success message
+        shell: powershell
