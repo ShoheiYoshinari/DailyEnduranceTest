@@ -20,7 +20,7 @@ jobs:
     runs-on: [self-hosted, windows-latest]
     steps:
       - name: リポジトリのチェックアウト
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: プロジェクトディレクトリの準備
         run: |
@@ -34,6 +34,11 @@ jobs:
             git pull origin develop
           }
         shell: powershell
+
+      - name: プロセスを開始
+        run: |
+          # プロセスを開始するPowerShellスクリプトを実行
+          powershell.exe -File scripts/start_process.ps1
 
   check-process:
     needs: prepare
@@ -96,4 +101,3 @@ jobs:
       - name: 結果をGitHub Actionsに通知
         run: |
           Write-Output "プロセスの結果: 成功" # 成功メッセージを表示
-          # 失敗している場合は、上位のステップで既に通知済み
