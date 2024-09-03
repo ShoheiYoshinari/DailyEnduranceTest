@@ -1,28 +1,28 @@
-name: worked Mekiki
+name: Worked Mekiki
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
+    - cron: '0 22 * * *'  # Start the process every day at 22:00
   workflow_dispatch:
     inputs:
       action:
-        description: '実行するアクション (start, check, stop)'
+        description: 'Action to perform (start, check, stop)'
         required: true
         default: 'start'
         type: string
       end_time:
-        description: '再試行ループを終了する時間 (HH:mm形式)'
-        required: false  # 自動実行の場合は不要
+        description: 'End time for retry loop (HH:mm format)'
+        required: false  # Not needed for automatic execution
         type: string
 
 jobs:
   prepare:
     runs-on: [self-hosted, windows]
     steps:
-      - name: リポジトリのチェックアウト
+      - name: Checkout Repository
         uses: actions/checkout@v3
         
-      - name: プロジェクトディレクトリの準備
+      - name: Prepare Project Directory
         run: |
           $projectDir = "C:\CSharp.Hutzper.Library"
           $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
@@ -35,21 +35,21 @@ jobs:
           }
         shell: powershell
 
-      - name: プロセスを開始
+      - name: Start Process
         run: |
-          # プロセスを開始するPowerShellスクリプトを実行
+          # Run the PowerShell script to start the process
           powershell.exe -File scripts/start_process.ps1
 
   check-process:
     needs: prepare
     runs-on: [self-hosted, windows]
     steps:
-      - name: プロセスが生きているか確認
+      - name: Check if Process is Alive
         run: |
-          # プロセスが生きているかを確認するスクリプト
+          # Script to check if the process is alive
           $isAlive = .\scripts\check_process.ps1
           if ($isAlive -eq $false) {
-            Write-Output "プロセスが停止しています。GitHub Actionsに通知します。"
+            Write-Output "The process has stopped. Notifying GitHub Actions."
             exit 1
           }
 
@@ -57,47 +57,47 @@ jobs:
     needs: check-process
     runs-on: [self-hosted, windows]
     steps:
-      - name: 5秒ごとにプロセスを確認
+      - name: Check Process Every 5 Seconds
         run: |
           if (${{ github.event_name }} == 'schedule') {
-            # 自動実行時 (22:00から開始)
-            $endTime = (Get-Date).Date.AddHours(6)  # 翌日6時まで確認
+            # During automatic execution (starts at 22:00)
+            $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
-            # 手動実行時
+            # During manual execution
             $endTimeString = '${{ github.event.inputs.end_time }}'
             if (-Not $endTimeString) {
-              Write-Output "終了時間が指定されていません。"
+              Write-Output "End time is not specified."
               exit 1
             }
             $endTime = [datetime]::ParseExact($endTimeString, 'HH:mm', $null).Date.AddHours([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Hour).AddMinutes([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Minute)
             
             if ($endTime -lt (Get-Date)) {
-              $endTime = $endTime.AddDays(1)  # 翌日までに設定
+              $endTime = $endTime.AddDays(1)  # Set to the next day if it's already past the end time
             }
           }
 
           while ((Get-Date) -lt $endTime) {
-            Start-Sleep -Seconds 5  # 5秒ごとに再確認
+            Start-Sleep -Seconds 5  # Recheck every 5 seconds
 
-            # 再度プロセス確認
+            # Recheck the process
             $isAlive = .\scripts\check_process.ps1
             if ($isAlive -eq $false) {
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              Write-Output "プロセスが $deadTime に停止しました。"
-              exit 1  # エラーコードを返してGitHub Actionsに通知
+              Write-Output "The process stopped at $deadTime."
+              exit 1  # Return error code to notify GitHub Actions
             }
           }
-          Write-Output "プロセスは指定された終了時間まで生きていました。セッションを終了します。"
+          Write-Output "The process stayed alive until the specified end time. Ending session."
 
   finalize:
     needs: retry-loop
     runs-on: [self-hosted, windows]
     steps:
-      - name: プロセスを正常に終了
+      - name: Gracefully End Process
         run: |
-          # メキキバイトの終了を行うスクリプト
+          # Run the script to gracefully end the Mekiki process
           powershell.exe -File scripts/end_process.ps1
 
-      - name: 結果をGitHub Actionsに通知
+      - name: Notify GitHub Actions of Result
         run: |
-          Write-Output "プロセスの結果: 成功" # 成功メッセージを表示
+          Write-Output "Process result: Success" # Display success message
