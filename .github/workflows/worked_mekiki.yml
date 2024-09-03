@@ -103,7 +103,9 @@ jobs:
               exit 1  # Return error code to notify GitHub Actions
             }
           }
+
           Write-Output "The process stayed alive until the specified end time. Ending session."
+          exit 0
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
