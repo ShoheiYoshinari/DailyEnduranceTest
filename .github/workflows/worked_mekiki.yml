@@ -1,0 +1,99 @@
+name: worked Mekiki
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '実行するアクション (start, check, stop)'
+        required: true
+        default: 'start'
+        type: string
+      end_time:
+        description: '再試行ループを終了する時間 (HH:mm形式)'
+        required: false  # 自動実行の場合は不要
+        type: string
+
+jobs:
+  prepare:
+    runs-on: [self-hosted, windows-latest]
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v2
+        
+      - name: プロジェクトディレクトリの準備
+        run: |
+          $projectDir = "C:\CSharp.Hutzper.Library"
+          $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
+          
+          if (-Not (Test-Path $projectDir)) {
+            git clone $repositoryUrl $projectDir
+          } else {
+            Set-Location -Path $projectDir
+            git pull origin develop
+          }
+        shell: powershell
+
+  check-process:
+    needs: prepare
+    runs-on: [self-hosted, windows-latest]
+    steps:
+      - name: プロセスが生きているか確認
+        run: |
+          # プロセスが生きているかを確認するスクリプト
+          $isAlive = .\scripts\check_process.ps1
+          if ($isAlive -eq $false) {
+            Write-Output "プロセスが停止しています。GitHub Actionsに通知します。"
+            exit 1
+          }
+
+  retry-loop:
+    needs: check-process
+    runs-on: [self-hosted, windows-latest]
+    steps:
+      - name: 5秒ごとにプロセスを確認
+        run: |
+          if (${{ github.event_name }} == 'schedule') {
+            # 自動実行時 (22:00から開始)
+            $endTime = (Get-Date).Date.AddHours(6)  # 翌日6時まで確認
+          } else {
+            # 手動実行時
+            $endTimeString = '${{ github.event.inputs.end_time }}'
+            if (-Not $endTimeString) {
+              Write-Output "終了時間が指定されていません。"
+              exit 1
+            }
+            $endTime = [datetime]::ParseExact($endTimeString, 'HH:mm', $null).Date.AddHours([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Hour).AddMinutes([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Minute)
+            
+            if ($endTime -lt (Get-Date)) {
+              $endTime = $endTime.AddDays(1)  # 翌日までに設定
+            }
+          }
+
+          while ((Get-Date) -lt $endTime) {
+            Start-Sleep -Seconds 5  # 5秒ごとに再確認
+
+            # 再度プロセス確認
+            $isAlive = .\scripts\check_process.ps1
+            if ($isAlive -eq $false) {
+              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              Write-Output "プロセスが $deadTime に停止しました。"
+              exit 1  # エラーコードを返してGitHub Actionsに通知
+            }
+          }
+          Write-Output "プロセスは指定された終了時間まで生きていました。セッションを終了します。"
+
+  finalize:
+    needs: retry-loop
+    runs-on: [self-hosted, windows-latest]
+    steps:
+      - name: プロセスを正常に終了
+        run: |
+          # メキキバイトの終了を行うスクリプト
+          powershell.exe -File scripts/end_process.ps1
+
+      - name: 結果をGitHub Actionsに通知
+        run: |
+          Write-Output "プロセスの結果: 成功" # 成功メッセージを表示
+          # 失敗している場合は、上位のステップで既に通知済み
