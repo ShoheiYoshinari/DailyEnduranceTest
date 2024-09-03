@@ -46,10 +46,29 @@ jobs:
     steps:
       - name: Check if Process is Alive
         run: |
-          # Script to check if the process is alive
-          $isAlive = .\scripts\check_process.ps1
-          if ($isAlive -eq $false) {
-            Write-Output "The process has stopped. Notifying GitHub Actions."
+          # Wait for 30 seconds before checking
+          Start-Sleep -Seconds 30
+          
+          # Initialize a flag to determine if the process was found alive at least once
+          $processWasAlive = $false
+          $timeout = (Get-Date).AddMinutes(1)  # Set the timeout to 1 minute from now
+
+          while ((Get-Date) -lt $timeout) {
+            # Check if the process is alive
+            $isAlive = .\scripts\check_process.ps1
+            if ($isAlive -eq $true) {
+              $processWasAlive = $true
+              break  # Exit loop if process is alive
+            }
+
+            # Sleep for a short interval before rechecking
+            Start-Sleep -Seconds 5
+          }
+
+          if ($processWasAlive -eq $true) {
+            Write-Output "The process was confirmed alive at least once within the 1-minute check period."
+          } else {
+            Write-Output "The process was not alive during the entire 1-minute check period. Notifying GitHub Actions."
             exit 1
           }
 
