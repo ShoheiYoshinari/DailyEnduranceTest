@@ -46,31 +46,28 @@ jobs:
     steps:
       - name: Check if Process is Alive
         run: |
-          # Wait for 30 seconds before checking
+          # Wait for 30 seconds before starting the check
           Start-Sleep -Seconds 30
-          
-          # Initialize a flag to determine if the process was found alive at least once
-          $processWasAlive = $false
-          $timeout = (Get-Date).AddMinutes(1)  # Set the timeout to 1 minute from now
 
-          while ((Get-Date) -lt $timeout) {
-            # Check if the process is alive
-            $isAlive = .\scripts\check_process.ps1
-            if ($isAlive -eq $true) {
-              $processWasAlive = $true
-              break  # Exit loop if process is alive
+          # Check if the process is alive for 1 minute
+          $processName = "Hutzper.Project.Mekiki"
+          $startTime = Get-Date
+          $endTime = $startTime.AddMinutes(1)
+          
+          while ((Get-Date) -lt $endTime) {
+            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+
+            if ($process) {
+              Write-Output "$processName is running."
+              exit 0
             }
 
-            # Sleep for a short interval before rechecking
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 5  # Check every 5 seconds
           }
-
-          if ($processWasAlive -eq $true) {
-            Write-Output "The process was confirmed alive at least once within the 1-minute check period."
-          } else {
-            Write-Output "The process was not alive during the entire 1-minute check period. Notifying GitHub Actions."
-            exit 1
-          }
+          
+          Write-Output "$processName has stopped within the 1-minute check period."
+          exit 1
+        shell: powershell
 
   retry-loop:
     needs: check-process
