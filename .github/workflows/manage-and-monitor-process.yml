@@ -37,7 +37,7 @@ jobs:
       - name: Perform Action
         if: ${{ github.event.inputs.action == 'start' || github.event.schedule.cron == '0 22 * * *' }}
         run: |
-          powershell -ExecutionPolicy Bypass -File "scripts/start_process2.ps1"
+          powershell -ExecutionPolicy Bypass -File "scripts/start_process.ps1"
         shell: powershell
 
       - name: Check Process
