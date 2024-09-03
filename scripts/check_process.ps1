@@ -4,7 +4,7 @@ $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
 
 if ($process) {
     Write-Output "$processName は実行中です。"
+    exit 1
 } else {
     Write-Output "$processName は停止しています。"
-    exit 1
 }
