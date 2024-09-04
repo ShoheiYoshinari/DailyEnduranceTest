@@ -44,7 +44,6 @@ jobs:
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
         shell: powershell
-        continue-on-error: true
 
       - name: Check if Hutzper.Project.Mekiki Process is Alive
         id: check-mekiki-process
