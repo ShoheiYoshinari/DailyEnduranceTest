@@ -60,7 +60,8 @@ jobs:
         id: check-mekiki-process
         run: |
           Write-Output "Starting Mekiki application..."
-          Start-Process -FilePath "dotnet" -ArgumentList "run --project 'C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj'" -NoNewWindow -PassThru | Out-Null
+          $projectPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$projectPath`"" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
 
           Write-Output "Checking if Mekiki process is alive..."
