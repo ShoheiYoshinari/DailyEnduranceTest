@@ -12,7 +12,7 @@ on:
         type: string
       end_time:
         description: 'End time for retry loop (HH:mm format)'
-        required: false  # Not needed for automatic execution
+        required: false
         type: string
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        
+
       - name: Prepare Project Directory
         run: |
           $projectDir = "C:\CSharp.Hutzper.Library"
@@ -38,17 +38,24 @@ jobs:
       - name: Start Process
         run: |
           Start-Process powershell.exe -ArgumentList "-File scripts/start_process2.ps1" -NoNewWindow -PassThru
+        shell: powershell
+
+  wait:
+    needs: prepare
+    runs-on: [self-hosted, windows]
+    steps:
+      - name: Wait for Prepare to Complete
+        run: |
+          Start-Sleep -Seconds 60  # Adjust as needed
+        shell: powershell
 
   check-process:
-    needs: prepare
+    needs: wait
     runs-on: [self-hosted, windows]
     steps:
       - name: Check if Process is Alive
         run: |
-          # Wait for 30 seconds before starting the check
           Start-Sleep -Seconds 30
-
-          # Check if the process is alive for 1 minute
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(1)
@@ -75,10 +82,8 @@ jobs:
       - name: Check Process Every 5 Seconds
         run: |
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
-            # During automatic execution (starts at 22:00)
             $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
-            # During manual execution
             $endTimeString = '${{ github.event.inputs.end_time }}'
             if (-Not $endTimeString) {
               Write-Output "End time is not specified."
@@ -91,21 +96,19 @@ jobs:
             }
           }
 
-          # Directly check if the process is alive
           $processName = "Hutzper.Project.Mekiki"
           while ((Get-Date) -lt $endTime) {
             Start-Sleep -Seconds 5  # Recheck every 5 seconds
 
-            # Recheck the process
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
             if (-Not $process) {
-            $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            Write-Output "The process stopped at $deadTime."
-            exit 1  # Return error code to notify GitHub Actions
+              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              Write-Output "The process stopped at $deadTime."
+              exit 1
             }
           }
-            Write-Output "The process stayed alive until the specified end time. Ending session."
-            exit 0
+          Write-Output "The process stayed alive until the specified end time. Ending session."
+          exit 0
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
@@ -116,8 +119,8 @@ jobs:
     steps:
       - name: Gracefully End Process
         run: |
-          # Run the script to gracefully end the Mekiki process
           powershell.exe -File scripts/stop_process.ps1
+        shell: powershell
 
       - name: Notify GitHub Actions of Result
         run: |
