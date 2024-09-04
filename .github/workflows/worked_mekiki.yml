@@ -54,7 +54,10 @@ jobs:
 
       - name: Build and Run Hutzper.Project.Mekiki
         run: |
-          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+          # Visual Studio 2022 のパスを指定
+          $visualStudioPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"
+          $solutionPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+          Start-Process -FilePath $visualStudioPath -ArgumentList $solutionPath
           Start-Sleep -Seconds 30
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
