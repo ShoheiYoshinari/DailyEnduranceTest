@@ -60,7 +60,7 @@ jobs:
         id: check-mekiki-process
         run: |
           Write-Output "Starting Mekiki application..."
-          Start-Process -FilePath "dotnet" -ArgumentList "run --project 'C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj'" -NoNewWindow -PassThru | Out-Null
+          dotnet run --project "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
           Start-Sleep -Seconds 30
 
           Write-Output "Checking if Mekiki process is alive..."
@@ -113,13 +113,4 @@ jobs:
               exit 1
             }
           }
-          Write-Output "The process stayed alive until the specified end time. Ending session."
-          exit 0
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-        shell: powershell
-
-      - name: Notify GitHub Actions of Result
-        run: |
-          Write-Output "Process result: Success"
-        shell: powershell
+          Write-Output "The process stayed alive until the specifi
