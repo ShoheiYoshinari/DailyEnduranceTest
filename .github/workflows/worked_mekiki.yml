@@ -53,27 +53,12 @@ jobs:
 
       - name: Build Project
         run: |
-          $msbuildPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-          $solutionPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
-          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic"
-          Start-Process -FilePath $msbuildPath -ArgumentList "$solutionPath $arguments" -Wait -NoNewWindow
-        shell: powershell
-
-      - name: Verify Build Output
-        run: |
-          Get-ChildItem -Path "C:\CSharp.Hutzper.Library\bin\Release" | Format-Table Name, Length
+          dotnet build "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -c Release -p:Platform=x64
         shell: powershell
 
       - name: Run Application
         run: |
-          $folderPath = "C:\CSharp.Hutzper.Library\bin\Release"
-          $exePath = Join-Path -Path $folderPath -ChildPath "Hutzper.Project.Mekiki.exe"
-          if (Test-Path $exePath) {
-            Start-Process -FilePath $exePath
-          } else {
-            Write-Output "File not found: $exePath"
-            exit 1
-          }
+          dotnet run --project "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
         shell: powershell
 
       - name: Check if Hutzper.Project.Mekiki Process is Alive
