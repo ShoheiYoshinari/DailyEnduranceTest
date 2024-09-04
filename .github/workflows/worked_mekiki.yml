@@ -39,7 +39,7 @@ jobs:
         id: start-visual-studio
         run: |
           # Start Visual Studio and open the solution file
-          Start-Process "devenv.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -NoNewWindow -PassThru
+          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
           Start-Sleep -Seconds 30
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
