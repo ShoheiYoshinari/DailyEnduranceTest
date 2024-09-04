@@ -1,4 +1,4 @@
-name: worked Mekiki
+name: Build and Run Mekiki
 
 on:
   schedule:
@@ -14,7 +14,18 @@ on:
         description: 'End time for retry loop (HH:mm format)'
         required: false
         type: string
-
+      branch:
+        description: 'Branch to use'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - 'main'
+          - 'develop'
+          - 'feature-branch1'
+          - 'feature-branch2'
+          # 必要に応じて他のブランチも追加
+          
 jobs:
   run:
     runs-on: [self-hosted, windows]
@@ -26,22 +37,25 @@ jobs:
         run: |
           $projectDir = "C:\CSharp.Hutzper.Library"
           $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
-          
+          $branch = '${{ github.event.inputs.branch }}'
+          if (-Not $branch) {
+            $branch = 'develop'
+          }
+
           if (-Not (Test-Path $projectDir)) {
             git clone $repositoryUrl $projectDir
           } else {
             Set-Location -Path $projectDir
-            git pull origin develop
+            git fetch origin
+            git checkout $branch
+            git pull origin $branch
           }
         shell: powershell
 
-      - name: Start Hutzper.Library Solution
-        id: start-mekiki
+      - name: Build and Run Hutzper.Project.Mekiki
         run: |
-          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
-          Start-Sleep -Seconds 30
-          Add-Type -AssemblyName System.Windows.Forms
-          [System.Windows.Forms.SendKeys]::SendWait("{F5}")
+          dotnet build C:\CSharp.Hutzper.Library\Hutzper.Project.Mekiki.csproj
+          dotnet run --project C:\CSharp.Hutzper.Library\Hutzper.Project.Mekiki.csproj
         shell: powershell
 
       - name: Check if Hutzper.Project.Mekiki Process is Alive
