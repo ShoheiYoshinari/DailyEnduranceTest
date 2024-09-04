@@ -37,8 +37,7 @@ jobs:
 
       - name: Start Process
         run: |
-          # Run the PowerShell script to start the process
-          powershell.exe -File scripts/start_process2.ps1
+          Start-Process powershell.exe -ArgumentList "-File scripts/start_process2.ps1" -NoNewWindow -PassThru
 
   check-process:
     needs: prepare

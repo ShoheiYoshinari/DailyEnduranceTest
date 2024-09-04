@@ -1,5 +1,5 @@
-# ソリューションファイルのパスを指定してプロセスを開始
-Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+# ソリューションファイルをバックグラウンドで起動する
+Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -NoNewWindow
 
 # 30秒間待機
 Start-Sleep -Seconds 30
