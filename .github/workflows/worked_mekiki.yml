@@ -58,8 +58,9 @@ jobs:
       
       - name: Run Application
         run: |
-          Start-Process dotnet -ArgumentList "run --project 'C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj'" -NoNewWindow -PassThru | Out-Null
+          Start-Process dotnet -ArgumentList "run --project \"C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj\"" -NoNewWindow -PassThru | Out-Null
         shell: powershell
+      
       
       - name: Check if Hutzper.Project.Mekiki Process is Alive
         id: check-mekiki-process
