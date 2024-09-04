@@ -59,27 +59,33 @@ jobs:
       - name: Run Mekiki and Check if Mekiki is Alive
         id: check-mekiki-process
         run: |
-          dotnet run --project "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+          Write-Output "Starting Mekiki application..."
+          dotnet run --project "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj" &
+          $processId = $LASTEXITCODE
           Start-Sleep -Seconds 30
-
+      
+          Write-Output "Checking if Mekiki process is alive..."
+      
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(1)
           
           while ((Get-Date) -lt $endTime) {
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-
+      
             if ($process) {
               Write-Output "$processName is running."
               exit 0
             }
-
+      
             Start-Sleep -Seconds 5
           }
           
           Write-Output "$processName has stopped within the 1-minute check period."
           exit 1
-
+      
+          Write-Output "Determining end time for process check..."
+      
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
             $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
@@ -94,11 +100,13 @@ jobs:
               $endTime = $endTime.AddDays(1)  # Set to the next day if it's already past the end time
             }
           }
-
+      
+          Write-Output "Checking process status until $endTime..."
+      
           $processName = "Hutzper.Project.Mekiki"
           while ((Get-Date) -lt $endTime) {
             Start-Sleep -Seconds 5
-
+      
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
             if (-Not $process) {
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -111,11 +119,7 @@ jobs:
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
-
-      - name: Close Hutzper.Project.Mekiki
-        run: |
-          Stop-Process -Name Hutzper.Project.Mekiki -Force
-        shell: powershell
+      
 
       - name: Notify GitHub Actions of Result
         run: |
