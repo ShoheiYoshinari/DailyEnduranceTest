@@ -38,8 +38,7 @@ jobs:
       - name: Start Hutzper.Library Solution
         id: start-mekiki
         run: |
-          # Start Visual Studio with the solution file
-          Start-Process "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -NoNewWindow
+          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
           Start-Sleep -Seconds 30
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
