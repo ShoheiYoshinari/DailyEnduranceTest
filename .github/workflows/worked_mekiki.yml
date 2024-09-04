@@ -1,4 +1,4 @@
-name: Build and Run Mekiki
+name: Worked Mekiki
 
 on:
   schedule:
@@ -55,9 +55,8 @@ jobs:
         run: |
           $msbuildPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
           $csprojPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
-          $outputPath = "C:\CSharp.Hutzper.Library\bin\Release"
-          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic /p:OutputPath=`"$outputPath`""
-          & $msbuildPath $csprojPath $arguments
+          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic"
+          Start-Process -FilePath $msbuildPath -ArgumentList "$csprojPath $arguments" -Wait -NoNewWindow
         shell: powershell
 
       - name: Verify Build Output
