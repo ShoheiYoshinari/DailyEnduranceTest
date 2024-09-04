@@ -2,7 +2,7 @@ name: Build and Run Mekiki
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # Start the process every day at 22:00
+    - cron: '0 22 * * *'
   workflow_dispatch:
     inputs:
       action:
@@ -53,7 +53,15 @@ jobs:
 
       - name: Build Project
         run: |
-          & "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj" /p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic
+          $msbuildPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+          $csprojPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic /p:OutputPath=C:\CSharp.Hutzper.Library\bin\Release"
+          & $msbuildPath $csprojPath $arguments
+        shell: powershell
+
+      - name: List Files in Release Directory
+        run: |
+          Get-ChildItem -Path "C:\CSharp.Hutzper.Library\bin\Release" | Format-Table Name, Length
         shell: powershell
 
       - name: Run Application
@@ -83,7 +91,7 @@ jobs:
               exit 0
             }
 
-            Start-Sleep -Seconds 5  # Check every 5 seconds
+            Start-Sleep -Seconds 5
           }
           
           Write-Output "$processName has stopped within the 1-minute check period."
@@ -93,7 +101,7 @@ jobs:
       - name: Check Process Every 5 Seconds
         run: |
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
-            $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
+            $endTime = (Get-Date).Date.AddHours(6)
           } else {
             $endTimeString = '${{ github.event.inputs.end_time }}'
             if (-Not $endTimeString) {
@@ -103,13 +111,13 @@ jobs:
             $endTime = [datetime]::ParseExact($endTimeString, 'HH:mm', $null).Date.AddHours([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Hour).AddMinutes([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Minute)
             
             if ($endTime -lt (Get-Date)) {
-              $endTime = $endTime.AddDays(1)  # Set to the next day if it's already past the end time
+              $endTime = $endTime.AddDays(1)
             }
           }
 
           $processName = "Hutzper.Project.Mekiki"
           while ((Get-Date) -lt $endTime) {
-            Start-Sleep -Seconds 5  # Recheck every 5 seconds
+            Start-Sleep -Seconds 5
 
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
             if (-Not $process) {
@@ -131,5 +139,5 @@ jobs:
 
       - name: Notify GitHub Actions of Result
         run: |
-          Write-Output "Process result: Success" # Display success message
+          Write-Output "Process result: Success"
         shell: powershell
