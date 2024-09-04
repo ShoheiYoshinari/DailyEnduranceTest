@@ -2,7 +2,7 @@ name: Build and Run Mekiki
 
 on:
   schedule:
-    - cron: '0 22 * * *'
+    - cron: '0 22 * * *'  # Start the process every day at 22:00
   workflow_dispatch:
     inputs:
       action:
@@ -59,7 +59,7 @@ jobs:
           & $msbuildPath $csprojPath $arguments
         shell: powershell
 
-      - name: List Files in Release Directory
+      - name: Verify Build Output
         run: |
           Get-ChildItem -Path "C:\CSharp.Hutzper.Library\bin\Release" | Format-Table Name, Length
         shell: powershell
@@ -101,7 +101,7 @@ jobs:
       - name: Check Process Every 5 Seconds
         run: |
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
-            $endTime = (Get-Date).Date.AddHours(6)
+            $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
             $endTimeString = '${{ github.event.inputs.end_time }}'
             if (-Not $endTimeString) {
@@ -111,7 +111,7 @@ jobs:
             $endTime = [datetime]::ParseExact($endTimeString, 'HH:mm', $null).Date.AddHours([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Hour).AddMinutes([datetime]::ParseExact($endTimeString, 'HH:mm', $null).Minute)
             
             if ($endTime -lt (Get-Date)) {
-              $endTime = $endTime.AddDays(1)
+              $endTime = $endTime.AddDays(1)  # Set to the next day if it's already past the end time
             }
           }
 
