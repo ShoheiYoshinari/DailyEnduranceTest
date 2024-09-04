@@ -1,4 +1,4 @@
-name: Visual Studio Workflow
+name: Worked Mekiki
 
 on:
   schedule:
@@ -16,7 +16,7 @@ on:
         type: string
 
 jobs:
-  prepare:
+  run:
     runs-on: [self-hosted, windows]
     steps:
       - name: Checkout Repository
@@ -44,12 +44,7 @@ jobs:
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
         shell: powershell
-        continue-on-error: true
 
-  check-process:
-    needs: prepare
-    runs-on: [self-hosted, windows]
-    steps:
       - name: Check if Process is Alive
         run: |
           Start-Sleep -Seconds 30
@@ -72,10 +67,6 @@ jobs:
           exit 1
         shell: powershell
 
-  retry-loop:
-    needs: check-process
-    runs-on: [self-hosted, windows]
-    steps:
       - name: Check Process Every 5 Seconds
         run: |
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
@@ -110,10 +101,6 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
 
-  finalize:
-    needs: retry-loop
-    runs-on: [self-hosted, windows]
-    steps:
       - name: Close Visual Studio
         run: |
           Stop-Process -Name devenv -Force
