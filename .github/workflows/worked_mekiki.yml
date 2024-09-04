@@ -24,7 +24,7 @@ on:
           - 'develop'
           - 'feature-branch1'
           - 'feature-branch2'
-          
+
 jobs:
   build_and_run:
     runs-on: [self-hosted, windows]
@@ -55,7 +55,8 @@ jobs:
         run: |
           $msbuildPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
           $csprojPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
-          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic /p:OutputPath=C:\CSharp.Hutzper.Library\bin\Release"
+          $outputPath = "C:\CSharp.Hutzper.Library\bin\Release"
+          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic /p:OutputPath=`"$outputPath`""
           & $msbuildPath $csprojPath $arguments
         shell: powershell
 
@@ -66,7 +67,8 @@ jobs:
 
       - name: Run Application
         run: |
-          $exePath = "C:\CSharp.Hutzper.Library\bin\Release\Hutzper.Project.Mekiki.exe"
+          $folderPath = "C:\CSharp.Hutzper.Library\bin\Release"
+          $exePath = Join-Path -Path $folderPath -ChildPath "Hutzper.Project.Mekiki.exe"
           if (Test-Path $exePath) {
             Start-Process -FilePath $exePath
           } else {
