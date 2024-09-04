@@ -54,8 +54,10 @@ jobs:
 
       - name: Build and Run Hutzper.Project.Mekiki
         run: |
-          dotnet build C:\CSharp.Hutzper.Library\Hutzper.Project.Mekiki.csproj
-          dotnet run --project C:\CSharp.Hutzper.Library\Hutzper.Project.Mekiki.csproj
+          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+          Start-Sleep -Seconds 30
+          Add-Type -AssemblyName System.Windows.Forms
+          [System.Windows.Forms.SendKeys]::SendWait("{F5}")
         shell: powershell
 
       - name: Check if Hutzper.Project.Mekiki Process is Alive
