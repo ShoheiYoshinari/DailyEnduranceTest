@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Action to perform (start, check, stop)'
+        description: 'Action to perform (build, run, check, stop)'
         required: false
-        default: 'start'
+        default: 'build'
         type: string
       end_time:
         description: 'End time for retry loop (HH:mm format)'
@@ -25,9 +25,9 @@ on:
           - 'feature-branch1'
           - 'feature-branch2'
           # 必要に応じて他のブランチも追加
-          
+
 jobs:
-  run:
+  build_and_run:
     runs-on: [self-hosted, windows]
     steps:
       - name: Checkout Repository
@@ -52,15 +52,15 @@ jobs:
           }
         shell: powershell
 
-      - name: Build and Run Hutzper.Project.Mekiki
+      - name: Build Project
         run: |
-          # Visual Studio 2022 のパスを指定
-          $visualStudioPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"
-          $solutionPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
-          Start-Process -FilePath $visualStudioPath -ArgumentList $solutionPath
-          Start-Sleep -Seconds 30
-          Add-Type -AssemblyName System.Windows.Forms
-          [System.Windows.Forms.SendKeys]::SendWait("{F5}")
+          Start-Process -FilePath "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln /p:Configuration=Release /p:Platform=x64" -Wait
+        shell: powershell
+
+      - name: Run Application
+        run: |
+          $exePath = "C:\CSharp.Hutzper.Library\bin\Release\Hutzper.Project.Mekiki.exe"
+          Start-Process -FilePath $exePath
         shell: powershell
 
       - name: Check if Hutzper.Project.Mekiki Process is Alive
