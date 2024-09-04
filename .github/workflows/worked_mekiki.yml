@@ -56,16 +56,12 @@ jobs:
           dotnet build "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj" -c Release
         shell: powershell
       
-      - name: Run Application
-        run: |
-          Start-Process dotnet -ArgumentList "run --project \"C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj\"" -NoNewWindow -PassThru | Out-Null
-        shell: powershell
-      
-      
-      - name: Check if Hutzper.Project.Mekiki Process is Alive
+      - name: Run Mekiki and Check if Mekiki is Alive
         id: check-mekiki-process
         run: |
+          Start-Process dotnet -ArgumentList "run --project \"C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj\"" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 30
+          
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(1)
@@ -83,10 +79,7 @@ jobs:
           
           Write-Output "$processName has stopped within the 1-minute check period."
           exit 1
-        shell: powershell
 
-      - name: Check Process Every 5 Seconds
-        run: |
           if ($env:GITHUB_EVENT_NAME -eq 'schedule') {
             $endTime = (Get-Date).Date.AddHours(6)  # Check until 6:00 the next day
           } else {
