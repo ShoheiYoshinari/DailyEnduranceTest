@@ -7,7 +7,7 @@ on:
     inputs:
       action:
         description: 'Action to perform (start, check, stop)'
-        required: true
+        required: false
         default: 'start'
         type: string
       end_time:
@@ -38,7 +38,7 @@ jobs:
       - name: Start Process
         run: |
           # Run the PowerShell script to start the process
-          powershell.exe -File scripts/start_process.ps1
+          powershell.exe -File scripts/start_process2.ps1
 
   check-process:
     needs: prepare
