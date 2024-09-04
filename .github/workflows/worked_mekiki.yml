@@ -54,7 +54,10 @@ jobs:
 
       - name: Build Project
         run: |
-          Start-Process -FilePath "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln /p:Configuration=Release /p:Platform=x64" -Wait
+          $msbuildPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+          $solutionPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+          $arguments = "/p:Configuration=Release /p:Platform=x64 /verbosity:diagnostic"
+          Start-Process -FilePath $msbuildPath -ArgumentList "$solutionPath $arguments" -Wait -NoNewWindow
         shell: powershell
 
       - name: Run Application
