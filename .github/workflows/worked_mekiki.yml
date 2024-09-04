@@ -53,14 +53,14 @@ jobs:
 
       - name: Build Project
         run: |
-          dotnet build "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -c Release -p:Platform=x64
+          dotnet build "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj" -c Release
         shell: powershell
-
+      
       - name: Run Application
         run: |
           Start-Process dotnet -ArgumentList "run --project 'C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj'" -NoNewWindow -PassThru | Out-Null
         shell: powershell
-
+      
       - name: Check if Hutzper.Project.Mekiki Process is Alive
         id: check-mekiki-process
         run: |
