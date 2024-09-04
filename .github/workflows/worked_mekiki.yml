@@ -1,4 +1,4 @@
-name: Worked Mekiki
+name: Visual Studio Workflow
 
 on:
   schedule:
@@ -35,20 +35,22 @@ jobs:
           }
         shell: powershell
 
-      - name: Start Visual Studio
-        id: start-visual-studio
+      - name: Start Hutzper.Library Solution
+        id: start-mekiki
         run: |
-          # Start Visual Studio and open the solution file
-          Start-Process "C:\CSharp.Hutzper.Library\Hutzper.Library.sln"
+          # Start Visual Studio with the solution file
+          Start-Process "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" -ArgumentList "C:\CSharp.Hutzper.Library\Hutzper.Library.sln" -NoNewWindow
           Start-Sleep -Seconds 30
           Add-Type -AssemblyName System.Windows.Forms
           [System.Windows.Forms.SendKeys]::SendWait("{F5}")
         shell: powershell
+        continue-on-error: true
 
-      - name: Check if Process is Alive
+      - name: Check if Hutzper.Project.Mekiki Process is Alive
+        id: check-mekiki-process
         run: |
           Start-Sleep -Seconds 30
-          $processName = "devenv"  # Visual Studio executable name
+          $processName = "Hutzper.Project.Mekiki"  # Process name to check
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(1)
           
@@ -84,7 +86,7 @@ jobs:
             }
           }
 
-          $processName = "devenv"
+          $processName = "Hutzper.Project.Mekiki"
           while ((Get-Date) -lt $endTime) {
             Start-Sleep -Seconds 5  # Recheck every 5 seconds
 
@@ -101,9 +103,9 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: powershell
 
-      - name: Close Visual Studio
+      - name: Close Hutzper.Project.Mekiki
         run: |
-          Stop-Process -Name devenv -Force
+          Stop-Process -Name Hutzper.Project.Mekiki -Force
         shell: powershell
 
       - name: Notify GitHub Actions of Result
