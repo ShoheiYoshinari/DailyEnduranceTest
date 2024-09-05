@@ -63,7 +63,7 @@ jobs:
         id: read-yaml
         run: |
           # YamlDotNetモジュールをインストールします
-          Install-Package -Name YamlDotNet -Source nuget.org
+          Install-Package -Name YamlDotNet -Source nuget.org -Force
 
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
@@ -77,11 +77,16 @@ jobs:
           # YAMLファイルの内容を読み込んでパースします
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $deserializer = New-Object YamlDotNet.Serialization.Deserializer
-          $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
+          try {
+            $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
+          } catch {
+            Write-Error "YAMLファイルのパース中にエラーが発生しました。"
+            exit 1
+          }
 
           # パースされた内容を設定ファイルに書き込みます
-          $configFilePath = "C:\CSharp.Hutzper.Library\config\camera_settings.json"
-          $parsedYaml | ConvertTo-Json -Depth 10 | Set-Content -Path $configFilePath
+          $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
+          $parsedYaml.cameras | ConvertTo-Json -Depth 10 | Set-Content -Path $configFilePath
 
           # パースされた内容を出力
           Write-Output "YAML内容を設定ファイルに書き込みました: $configFilePath"
@@ -90,7 +95,7 @@ jobs:
       - name: Run Camera Tests
         run: |
           # 設定ファイルを読み込み、テストを実行します
-          $configFilePath = "C:\CSharp.Hutzper.Library\config\camera_settings.json"
+          $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
           if (-Not (Test-Path $configFilePath)) {
             Write-Error "設定ファイル '$configFilePath' が存在しません。"
             exit 1
@@ -104,21 +109,18 @@ jobs:
 
           foreach ($camera in $cameraSettings.cameras) {
             Write-Output "カメラ: $($camera.name)"
-            Write-Output "テスト時間: $($camera.test_duration) 分"
+            Write-Output "テスト時間: $($camera.duration_minutes) 分"
 
             # カメラごとにテストを実行
             $processName = "Hutzper.Project.Mekiki"
             $startTime = Get-Date
-            $endTime = $startTime.AddMinutes($camera.test_duration)
+            $endTime = $startTime.AddMinutes($camera.duration_minutes)
 
             Write-Output "カメラ $($camera.name) のテストを開始します。"
 
             # テスト実行
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
-              # テスト用スクリプトを呼び出す
-              # .\test_camera.ps1 -CameraName $camera.name -Duration $camera.test_duration
-
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               if (-Not $process) {
                 $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -133,7 +135,7 @@ jobs:
           }
 
           # テスト結果を出力
-          $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\config\test_results.txt"
+          $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
           Write-Output "すべてのカメラのテストが完了しました。結果は 'test_results.txt' に保存されています。"
         shell: powershell
 
