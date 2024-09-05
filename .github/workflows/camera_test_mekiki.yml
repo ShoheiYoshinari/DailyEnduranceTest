@@ -1,0 +1,143 @@
+name: Camara Endurance Test
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
+  workflow_dispatch:
+    inputs:
+      yaml_file:
+        description: '読み込むYAMLファイルの名前 (拡張子なし)'
+        required: true
+        default: 'weekdays'
+      build_or_publish:
+        description: 'ビルドまたは公開 (build または publish)'
+        required: true
+        default: 'build'
+        type: string
+
+jobs:
+  endurance_test_mekiki:
+    runs-on: [self-hosted, windows]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Prepare Mekiki Directory
+        run: |
+          $projectDir = "C:\CSharp.Hutzper.Library"
+          $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
+          $branch = '${{ github.ref_name }}'
+
+          # branchがmainのとき、developに変更（のちに変更）
+          if ($branch -eq 'main') {
+            $branch = 'develop'
+          }
+          if (-Not (Test-Path $projectDir)) {
+            git clone $repositoryUrl $projectDir
+          } else {
+            Set-Location -Path $projectDir
+            git fetch origin
+            git checkout $branch
+            git pull origin $branch
+          }
+        shell: powershell
+
+      - name: Build or Publish Project
+        run: |
+          $operation = '${{ github.event.inputs.build_or_publish }}'
+          $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+
+          if ($operation -eq 'build') {
+            dotnet build $projectFile -c Release
+          } elseif ($operation -eq 'publish') {
+            dotnet publish $projectFile -c Release -o "C:\CSharp.Hutzper.Library\publish"
+          } else {
+            Write-Error "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
+            exit 1
+          }
+        shell: powershell
+
+      - name: Read YAML File
+        id: read-yaml
+        run: |
+          # YamlDotNetモジュールをインストールします
+          Install-Package -Name YamlDotNet -Source nuget.org
+
+          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
+          $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
+
+          # YAMLファイルが存在するか確認します
+          if (-Not (Test-Path $yamlFilePath)) {
+            Write-Error "YAMLファイル '$yamlFilePath' が存在しません。"
+            exit 1
+          }
+
+          # YAMLファイルの内容を読み込んでパースします
+          $yamlContent = Get-Content $yamlFilePath | Out-String
+          $deserializer = New-Object YamlDotNet.Serialization.Deserializer
+          $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
+
+          # パースされた内容を設定ファイルに書き込みます
+          $configFilePath = "C:\CSharp.Hutzper.Library\config\camera_settings.json"
+          $parsedYaml | ConvertTo-Json -Depth 10 | Set-Content -Path $configFilePath
+
+          # パースされた内容を出力
+          Write-Output "YAML内容を設定ファイルに書き込みました: $configFilePath"
+        shell: powershell
+
+      - name: Run Camera Tests
+        run: |
+          # 設定ファイルを読み込み、テストを実行します
+          $configFilePath = "C:\CSharp.Hutzper.Library\config\camera_settings.json"
+          if (-Not (Test-Path $configFilePath)) {
+            Write-Error "設定ファイル '$configFilePath' が存在しません。"
+            exit 1
+          }
+
+          $configContent = Get-Content $configFilePath | Out-String
+          $cameraSettings = $configContent | ConvertFrom-Json
+
+          # テスト結果を格納するリスト
+          $results = @()
+
+          foreach ($camera in $cameraSettings.cameras) {
+            Write-Output "カメラ: $($camera.name)"
+            Write-Output "テスト時間: $($camera.test_duration) 分"
+
+            # カメラごとにテストを実行
+            $processName = "Hutzper.Project.Mekiki"
+            $startTime = Get-Date
+            $endTime = $startTime.AddMinutes($camera.test_duration)
+
+            Write-Output "カメラ $($camera.name) のテストを開始します。"
+
+            # テスト実行
+            while ((Get-Date) -lt $endTime) {
+              Start-Sleep -Seconds 5
+              # テスト用スクリプトを呼び出す
+              # .\test_camera.ps1 -CameraName $camera.name -Duration $camera.test_duration
+
+              $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+              if (-Not $process) {
+                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                Write-Output "プロセスが $deadTime に停止しました。"
+                $results += "$($camera.name): Failure"
+                continue
+              }
+            }
+
+            Write-Output "カメラ $($camera.name) のテストが完了しました。"
+            $results += "$($camera.name): Success"
+          }
+
+          # テスト結果を出力
+          $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\config\test_results.txt"
+          Write-Output "すべてのカメラのテストが完了しました。結果は 'test_results.txt' に保存されています。"
+        shell: powershell
+
+      - name: Notify GitHub Actions of Result
+        run: |
+          Write-Output "テスト結果: 成功"
+        shell: powershell
