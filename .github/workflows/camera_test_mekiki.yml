@@ -138,11 +138,11 @@ jobs:
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if (-Not $process) {
-                Write-Output "$seadtime: カメラ $($camera.name)が停止しました"
-                $results += "$seadtime: $($camera.name): Failure"
+                Write-Output "$($seadtime): カメラ $($camera.name)が停止しました"
+                $results += "$($seadtime): $($camera.name): Failure"
                 
               }else{
-                Write-Output "$seadtime: カメラ $($camera.name) は動作しています"
+                Write-Output "$($seadtime): カメラ $($camera.name) は動作しています"
               }
             }
             if(-Not $cameraStopped){
