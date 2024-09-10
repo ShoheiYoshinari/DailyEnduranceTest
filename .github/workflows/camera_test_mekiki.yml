@@ -44,6 +44,12 @@ jobs:
           }
         shell: powershell
 
+      - name: Restore and Build YamlParser Project
+        run: |
+          dotnet restore C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj
+          dotnet build C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj -c Release
+        shell: powershell
+
       - name: Build or Publish Project
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
@@ -70,6 +76,11 @@ jobs:
 
           # C#アプリケーションでYAMLファイルをJSONに変換
           dotnet run --project C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj -- $yamlFilePath $jsonOutputPath
+
+          if (-Not (Test-Path $jsonOutputPath)) {
+            Write-Error "JSON出力ファイル '$jsonOutputPath' が作成されていません。"
+            exit 1
+          }
 
           # 結果を表示
           Get-Content $jsonOutputPath
@@ -116,5 +127,11 @@ jobs:
 
       - name: Notify GitHub Actions of Result
         run: |
-          Write-Output "テスト結果: 成功"
+          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
+          if (Test-Path $resultsFilePath) {
+            Write-Output "テスト結果: 成功"
+          } else {
+            Write-Error "テスト結果ファイルが見つかりません。"
+            exit 1
+          }
         shell: powershell
