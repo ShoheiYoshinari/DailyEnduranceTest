@@ -64,7 +64,7 @@ jobs:
 
       - name: Parse YAML File and Write to JSON
         run: |
-          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
+          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
           $jsonOutputPath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
 
