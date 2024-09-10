@@ -88,6 +88,32 @@ jobs:
 
       - name: Run Camera Tests
         run: |
+          Write-Output "Starting Mekiki application..."
+          $projectPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$projectPath`"" -NoNewWindow -PassThru | Out-Null
+          Start-Sleep -Seconds 5
+
+          Write-Output "Checking if Mekiki process is alive..."
+          $processName = "Hutzper.Project.Mekiki"
+          $startTime = Get-Date
+          $endTime = $startTime.AddMinutes(1)
+          
+          while ((Get-Date) -lt $endTime) {
+            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+
+            if ($process) {
+              Write-Output "$processName is running."
+              break
+            }
+            Start-Sleep -Seconds 5
+          }
+
+          if (-Not $process) {
+            Write-Output "$processName has stopped within the 1-minute check period."
+            exit 1
+          }
+
+          #各カメラの動作テスト
           $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
           if (-Not (Test-Path $configFilePath)) {
             Write-Error "設定ファイル '$configFilePath' が存在しません。"
@@ -106,18 +132,21 @@ jobs:
             $endTime = $startTime.AddMinutes($camera.duration_minutes)
 
             Write-Output "カメラ $($camera.name) のテストを開始します。"
+            $cameraStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               if (-Not $process) {
                 $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                Write-Output "プロセスが $deadTime に停止しました。"
+                $results += "$($camera.name): Failure (Stopped at $deadTime)"
                 $results += "$($camera.name): Failure"
-                continue
+                break
               }
             }
-            Write-Output "カメラ $($camera.name) のテストが完了しました。"
-            $results += "$($camera.name): Success"
+            if(-Not $cameraStopped){
+              Write-Output "カメラ $($camera.name) のテストが完了しました。"
+              $results += "$($camera.name): Success"
+            }
           }
 
           # 結果を保存
@@ -129,7 +158,7 @@ jobs:
         run: |
           $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
           if (Test-Path $resultsFilePath) {
-            Write-Output "テスト結果: 成功"
+            Write-Output "テスト結果を保存しました"
           } else {
             Write-Error "テスト結果ファイルが見つかりません。"
             exit 1
