@@ -131,27 +131,25 @@ jobs:
             $startTime = Get-Date
             $endTime = $startTime.AddMinutes($camera.duration_minutes)
 
-            Write-Output "カメラ $($camera.name) のテストを開始します。"
+            Write-Output "カメラ $($camera.name) のテストを開始します"
             $cameraStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if (-Not $process) {
-                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                $results += "$($camera.name): Failure (Stopped at $deadTime)"
-                $results += "$($camera.name): Failure"
-                break
+                Write-Output "$seadtime: カメラ $($camera.name)が停止しました"
+                $results += "$seadtime: $($camera.name): Failure"
+                
+              }else{
+                Write-Output "$seadtime: カメラ $($camera.name) は動作しています"
               }
             }
             if(-Not $cameraStopped){
-              Write-Output "カメラ $($camera.name) のテストが完了しました。"
+              Write-Output "カメラ $($camera.name) のテストが成功しました"
               $results += "$($camera.name): Success"
             }
           }
-
-          # 結果を保存
-          $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
-          Write-Output "結果が 'test_results.txt' に保存されました。"
         shell: powershell
 
       - name: Notify GitHub Actions of Result
@@ -160,7 +158,7 @@ jobs:
           if (Test-Path $resultsFilePath) {
             Write-Output "テスト結果を保存しました"
           } else {
-            Write-Error "テスト結果ファイルが見つかりません。"
+            Write-Error "テスト結果ファイルが見つかりません"
             exit 1
           }
         shell: powershell
