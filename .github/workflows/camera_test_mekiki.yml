@@ -47,6 +47,10 @@ jobs:
       - name: Build or Publish Project
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
+          # $operation に値が入っていない場合は、'build' をデフォルトに設定
+          if ([string]::IsNullOrEmpty($operation)) {
+            $operation = 'build'
+          }
           $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
 
           if ($operation -eq 'build') {
