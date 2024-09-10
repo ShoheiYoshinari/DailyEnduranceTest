@@ -123,8 +123,8 @@ jobs:
           $configContent = Get-Content $configFilePath | Out-String
           $cameraSettings = $configContent | ConvertFrom-Json
 
-          $results = @()
           foreach ($camera in $cameraSettings.cameras) {
+            $results = @()
             Write-Output "カメラ: $($camera.name)"
             Write-Output "テスト時間: $($camera.duration_minutes) 分"
             $processName = "Hutzper.Project.Mekiki"
@@ -147,6 +147,9 @@ jobs:
               }
             }
             # 結果を保存
+            if($cameraStopped){
+              $results += "$($camera.name): Success"
+            }
             $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\result\test_results.txt"
             Write-Output "結果が 'test_results.txt' に保存されました"
 
