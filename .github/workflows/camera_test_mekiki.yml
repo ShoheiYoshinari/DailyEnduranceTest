@@ -138,18 +138,27 @@ jobs:
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if (-Not $process) {
-                Write-Output "$($seadtime): カメラ $($camera.name)が停止しました"
-                $results += "$($seadtime): $($camera.name): Failure"
-                
+                Write-Output "$($deadtime): カメラ $($camera.name)が停止しました"
+                $results += "$($deadtime): $($camera.name): Failure"
+                $cameraStopped = $true
+                break
               }else{
-                Write-Output "$($seadtime): カメラ $($camera.name) は動作しています"
+                Write-Output "$($deadtime): カメラ $($camera.name) は動作しています"
               }
             }
+            # 結果を保存
+            $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
+            Write-Output "結果が 'test_results.txt' に保存されました。
+
             if(-Not $cameraStopped){
               Write-Output "カメラ $($camera.name) のテストが成功しました"
               $results += "$($camera.name): Success"
+            }else{
+              Write-Output "カメラ $($camera.name) のテストが失敗しました"
+              exit 1
             }
           }
+
         shell: powershell
 
       - name: Notify GitHub Actions of Result
