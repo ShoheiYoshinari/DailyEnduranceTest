@@ -66,11 +66,15 @@ jobs:
       - name: Read YAML File
         id: read-yaml
         run: |
-          # YamlDotNetモジュールをインストールします
-          $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
-          dotnet add $projectFile package YamlDotNet --version 12.0.0
+          # YamlDotNetアセンブリをロードします
+          $dllPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\bin\Release\YamlDotNet.dll"
+          if (-Not (Test-Path $dllPath)) {
+            Write-Error "YamlDotNetのアセンブリが見つかりません: $dllPath"
+            exit 1
+          }
+          Add-Type -Path $dllPath
 
-          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
+          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
 
           # YAMLファイルが存在するか確認します
@@ -82,12 +86,7 @@ jobs:
           # YAMLファイルの内容を読み込んでパースします
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $deserializer = New-Object YamlDotNet.Serialization.Deserializer
-          try {
-            $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
-          } catch {
-            Write-Error "YAMLファイルのパース中にエラーが発生しました。"
-            exit 1
-          }
+          $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
 
           # パースされた内容を設定ファイルに書き込みます
           $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
