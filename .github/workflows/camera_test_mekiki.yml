@@ -165,3 +165,38 @@ jobs:
           Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
         shell: powershell
 
+  send-slack-notification:
+    runs-on: ubuntu-latest
+    needs: endurance_test_mekiki
+    if: always()
+    steps:
+      - name: Send Slack Notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+            # タイムスタンプの取得
+              TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
+
+            # 結果ファイルのパス
+            RESULTS_FILE_PATH="C:\\CSharp.Hutzper.Library\\test_endurance\\result\\test_results_$TIMESTAMP.txt"
+
+            # 結果が存在するか確認
+            if [ -f "$RESULTS_FILE_PATH" ]; then
+              RESULTS=$(cat "$RESULTS_FILE_PATH")
+            else
+              RESULTS="結果ファイルが見つかりませんでした。"
+            fi
+
+            # ステータスに応じたメッセージを設定
+            if [ ${{ job.status }} == "success" ]; then
+              STATUS="成功"
+            else
+              STATUS="失敗"
+            fi
+
+            # Slackに通知を送信
+            curl -X POST -H 'Content-type: application/json' --data "{
+              \"text\": \"カメラ耐久テスト結果: $STATUS\\n\\nテスト結果:\\n$RESULTS\"
+            }" $SLACK_WEBHOOK_URL
+
+
