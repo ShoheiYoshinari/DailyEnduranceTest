@@ -67,7 +67,8 @@ jobs:
         id: read-yaml
         run: |
           # YamlDotNetモジュールをインストールします
-          Install-Package -Name YamlDotNet -Source nuget.org -Force
+          $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+          dotnet add $projectFile package YamlDotNet --version 12.0.0
 
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
