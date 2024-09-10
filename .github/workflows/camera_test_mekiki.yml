@@ -1,4 +1,4 @@
-name: Camara Endurance Test
+name: Camera Endurance Test
 
 on:
   schedule:
@@ -47,7 +47,6 @@ jobs:
       - name: Build or Publish Project
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
-          # $operation に値が入っていない場合は、'build' をデフォルトに設定
           if ([string]::IsNullOrEmpty($operation)) {
             $operation = 'build'
           }
@@ -63,42 +62,21 @@ jobs:
           }
         shell: powershell
 
-      - name: Read YAML File
-        id: read-yaml
+      - name: Parse YAML File and Write to JSON
         run: |
-          # YamlDotNetアセンブリをロードします
-          $dllPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\bin\Release\YamlDotNet.dll"
-          if (-Not (Test-Path $dllPath)) {
-            Write-Error "YamlDotNetのアセンブリが見つかりません: $dllPath"
-            exit 1
-          }
-          Add-Type -Path $dllPath
-
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
+          $jsonOutputPath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
 
-          # YAMLファイルが存在するか確認します
-          if (-Not (Test-Path $yamlFilePath)) {
-            Write-Error "YAMLファイル '$yamlFilePath' が存在しません。"
-            exit 1
-          }
+          # C#アプリケーションでYAMLファイルをJSONに変換
+          dotnet run --project C:\CSharp.Hutzper.Library\YamlParser.csproj -- $yamlFilePath $jsonOutputPath
 
-          # YAMLファイルの内容を読み込んでパースします
-          $yamlContent = Get-Content $yamlFilePath | Out-String
-          $deserializer = New-Object YamlDotNet.Serialization.Deserializer
-          $parsedYaml = $deserializer.Deserialize([string]$yamlContent)
-
-          # パースされた内容を設定ファイルに書き込みます
-          $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
-          $parsedYaml.cameras | ConvertTo-Json -Depth 10 | Set-Content -Path $configFilePath
-
-          # パースされた内容を出力
-          Write-Output "YAML内容を設定ファイルに書き込みました: $configFilePath"
+          # 結果を表示
+          Get-Content $jsonOutputPath
         shell: powershell
 
       - name: Run Camera Tests
         run: |
-          # 設定ファイルを読み込み、テストを実行します
           $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
           if (-Not (Test-Path $configFilePath)) {
             Write-Error "設定ファイル '$configFilePath' が存在しません。"
@@ -108,21 +86,15 @@ jobs:
           $configContent = Get-Content $configFilePath | Out-String
           $cameraSettings = $configContent | ConvertFrom-Json
 
-          # テスト結果を格納するリスト
           $results = @()
-
           foreach ($camera in $cameraSettings.cameras) {
             Write-Output "カメラ: $($camera.name)"
             Write-Output "テスト時間: $($camera.duration_minutes) 分"
-
-            # カメラごとにテストを実行
             $processName = "Hutzper.Project.Mekiki"
             $startTime = Get-Date
             $endTime = $startTime.AddMinutes($camera.duration_minutes)
 
             Write-Output "カメラ $($camera.name) のテストを開始します。"
-
-            # テスト実行
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
@@ -133,14 +105,13 @@ jobs:
                 continue
               }
             }
-
             Write-Output "カメラ $($camera.name) のテストが完了しました。"
             $results += "$($camera.name): Success"
           }
 
-          # テスト結果を出力
+          # 結果を保存
           $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
-          Write-Output "すべてのカメラのテストが完了しました。結果は 'test_results.txt' に保存されています。"
+          Write-Output "結果が 'test_results.txt' に保存されました。"
         shell: powershell
 
       - name: Notify GitHub Actions of Result
