@@ -70,7 +70,7 @@ jobs:
           $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
           dotnet add $projectFile package YamlDotNet --version 12.0.0
 
-          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yaml'
+          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
           $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
 
           # YAMLファイルが存在するか確認します
