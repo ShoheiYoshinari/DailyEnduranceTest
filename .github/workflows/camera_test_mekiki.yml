@@ -181,16 +181,21 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TIMESTAMP: ${{ env.TIMESTAMP }}
         run: |
-          RESULTS_FILE_PATH="C:/CSharp.Hutzper.Library/test_endurance/result/test_results_${TIMESTAMP}.txt"
+          $resultsFilePath = "C:/CSharp.Hutzper.Library/test_endurance/result/test_results_${{ env.TIMESTAMP }}.txt"
           
-          if [ -f "$RESULTS_FILE_PATH" ]; then
-            RESULTS=$(cat "$RESULTS_FILE_PATH")
-          else
-            RESULTS="結果ファイルが見つかりませんでした。"
-          fi
+          if (Test-Path $resultsFilePath) {
+            $results = Get-Content $resultsFilePath | Out-String
+          } else {
+            $results = "結果ファイルが見つかりませんでした。"
+          }
 
-          STATUS=${{ job.status }}
+          $status = "${{ job.status }}"
 
-          curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \"カメラ耐久テスト結果: ${STATUS}\\n\\nテスト結果:\\n$RESULTS\"
-          }" $SLACK_WEBHOOK_URL
+          $payload = @{
+            text = "カメラ耐久テスト結果: $status`n`nテスト結果:`n$results"
+          }
+
+          $jsonPayload = $payload | ConvertTo-Json -Compress
+
+          Invoke-RestMethod -Uri $env:SLACK_WEBHOOK_URL -Method Post -ContentType 'application/json' -Body $jsonPayload
+        shell: powershell
