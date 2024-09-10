@@ -165,7 +165,7 @@ jobs:
 
       - name: Notify GitHub Actions of Result
         run: |
-          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\test\test_results.txt"
+          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\result\test_results.txt"
           if (Test-Path $resultsFilePath) {
             Write-Output "テスト結果を保存しました"
             $resultsContent = Get-Content $resultsFilePath
