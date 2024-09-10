@@ -71,7 +71,7 @@ jobs:
       - name: Parse YAML File and Write to JSON
         run: |
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
-          $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\$yamlFileName"
+          $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\settings\$yamlFileName"
           $jsonOutputPath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
 
           # C#アプリケーションでYAMLファイルをJSONに変換
@@ -147,7 +147,7 @@ jobs:
               }
             }
             # 結果を保存
-            $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
+            $results | Out-File -FilePath "C:\CSharp.Hutzper.Library\test_endurance\result\test_results.txt"
             Write-Output "結果が 'test_results.txt' に保存されました"
 
             if (-Not $cameraStopped) {
@@ -162,7 +162,7 @@ jobs:
 
       - name: Notify GitHub Actions of Result
         run: |
-          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\test_results.txt"
+          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\test\test_results.txt"
           if (Test-Path $resultsFilePath) {
             Write-Output "テスト結果を保存しました"
             $resultsContent = Get-Content $resultsFilePath
