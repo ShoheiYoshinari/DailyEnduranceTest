@@ -150,19 +150,18 @@ jobs:
               }
             }
             # 結果を保存
-            if($cameraStopped){
-              $results += "$($camera.name): Success"
-            }
-            $results | Out-File -FilePath $resultsFilePath -Append
-            Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-
             if (-Not $cameraStopped) {
               Write-Output "カメラ $($camera.name) のテストが成功しました"
-              $results += "$($camera.name): Success"
+              $results += "$($camera.name):Success"
             } else {
               Write-Output "カメラ $($camera.name) のテストが失敗しました"
+              $results += "$($camera.name):Failure"
+              $results | Out-File -FilePath $resultsFilePath -Append
+              Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
               exit 1
             }
           }
+          $results | Out-File -FilePath $resultsFilePath -Append
+          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
         shell: powershell
 
