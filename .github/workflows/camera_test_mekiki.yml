@@ -69,7 +69,7 @@ jobs:
           $jsonOutputPath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
 
           # C#アプリケーションでYAMLファイルをJSONに変換
-          dotnet run --project C:\CSharp.Hutzper.Library\YamlParser.csproj -- $yamlFilePath $jsonOutputPath
+          dotnet run --project C:\CSharp.Hutzper.Library\test_endurance\YamlParser.csproj -- $yamlFilePath $jsonOutputPath
 
           # 結果を表示
           Get-Content $jsonOutputPath
