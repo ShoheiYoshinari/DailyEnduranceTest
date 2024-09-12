@@ -22,7 +22,7 @@ on:
 env:
   test_dir: "C:/Hutzper/self_host_runner"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
-  yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
+  #yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
   mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
   results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
@@ -70,11 +70,10 @@ jobs:
           }
         shell: powershell
 
-      - name: Restore and build YamlParser
-        run: |
-          dotnet restore ${{ env.yaml_parser_proj }}
-          dotnet build ${{ env.yaml_parser_proj }} -c Release
-        shell: powershell
+      ##- name: Restore and build YamlParser
+      ##    dotnet restore ${{ env.yaml_parser_proj }}
+      ##    dotnet build ${{ env.yaml_parser_proj }} -c Release
+      ##  shell: powershell
 
       - name: Build or Publish Project
         run: |
