@@ -162,9 +162,6 @@ jobs:
               Start-Sleep -Seconds 5
 
               $logContent = Get-Content $logFilePath -Raw
-              Write-Output "Current log content:"
-              Write-Output $logContent
-
               $logLines = $logContent -split "`n"
               $filteredLines = @()
               foreach ($line in $logLines) {
@@ -177,28 +174,25 @@ jobs:
                   }
                 }
               }
-
-              Write-Output "Filtered log content:"
-              $filteredLines | ForEach-Object { Write-Output $_ }
-
               $logResults += $filteredLines
 
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($filteredLines -match "異常") {
-                Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
+                Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += $errorLines
                 $processStopped = $true
                 break
               } else {
-                Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
+                Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
             }
             if (-Not $processStopped) {
-              Write-Output "プロセス $($tests.name) のテストが成功しました"
+              Write-Output " $($tests.name) のテストが成功しました"
               $results += "$($tests.name): Success"
             } else {
-              Write-Output "プロセス $($tests.name) のテストが失敗しました"
+              Write-Output "$($tests.name) のテストが失敗しました"
+              Write-Output $logResults
               $results += "$($tests.name): Failure"
               $results | Out-File -FilePath $resultsFilePath -Append
               Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
