@@ -1,4 +1,4 @@
-name: Camera Endurance Test
+name: Endurance Test
 
 on:
   schedule:
@@ -33,7 +33,10 @@ jobs:
     steps:
       - name: Get Current Timestamp
         id: get_timestamp
-        run: echo "::set-output name=timestamp::$(date +'%Y%m%d-%H%M%S')"
+        run: |
+          $timestamp = (Get-Date -Format "yyyyMMdd-HHmmss")
+          echo "::set-output name=timestamp::$timestamp"
+        shell: powershell
 
   endurance_test_mekiki:
     runs-on: [self-hosted, windows]
