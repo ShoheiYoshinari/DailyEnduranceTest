@@ -24,7 +24,7 @@ env:
   mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
   log_dir: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
-  results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
+  base_results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
 
 jobs:
   set_timestamp:
@@ -136,12 +136,20 @@ jobs:
             exit 1
           }
 
+          # 日付ごとのフォルダを作成
+          $dateFolder = "${{ env.base_results_dir }}/$($env.date_suffix)"
+          if (-Not (Test-Path $dateFolder)) {
+            New-Item -Path $dateFolder -ItemType Directory | Out-Null
+          }
+
           # 動作テスト
           $logFilePath = "${{ env.log_dir }}/${{ env.date_suffix }}.log"
           $timestamp = '${{ env.timestamp }}'
-          $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
+          $resultsFilePath = "${dateFolder}\test_results_$timestamp.txt"
+          $logResultsFilePath = "${dateFolder}\log_results_$timestamp.txt"
 
           $results = @()
+          $logResults = @()
           foreach ($tests in $processSettings.tests) {
             Write-Output "プロセス: $($tests.name)"
             Write-Output "テスト時間: $($tests.duration_minutes) 分"
@@ -173,10 +181,12 @@ jobs:
               Write-Output "Filtered log content:"
               $filteredLines | ForEach-Object { Write-Output $_ }
 
+              $logResults += $filteredLines
+
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              if ($filteredLines -match "異常") {
+              if ($logContent -match "異常") {
                 Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
-                $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
+                $errorLines = $logContent | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += $errorLines
                 $processStopped = $true
                 break
@@ -192,9 +202,10 @@ jobs:
               $results += "$($tests.name): Failure"
               $results | Out-File -FilePath $resultsFilePath -Append
               Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+              $logResults | Out-File -FilePath $logResultsFilePath -Append
+              Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
               exit 1
             }
           }
-          $results | Out-File -FilePath $resultsFilePath -Append
-          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+
         shell: powershell
