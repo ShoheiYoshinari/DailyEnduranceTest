@@ -207,5 +207,8 @@ jobs:
               exit 1
             }
           }
-
+          $results | Out-File -FilePath $resultsFilePath -Append
+          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+          $logResults | Out-File -FilePath $logResultsFilePath -Append
+          Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
         shell: powershell
