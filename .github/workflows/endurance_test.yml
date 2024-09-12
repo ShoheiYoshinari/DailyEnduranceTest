@@ -12,8 +12,11 @@ on:
       build_or_publish:
         description: 'ビルドまたは公開 (build または publish)'
         required: true
+        type: choice
+        options:
+          - 'build'
+          - 'publish'
         default: 'build'
-        type: string
 
 # グローバルに使う変数をenvセクションに定義（小文字）
 env:
