@@ -186,7 +186,7 @@ jobs:
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($filteredLines -match "異常") {
                 Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
-                $errorLines = $$filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
+                $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += $errorLines
                 $processStopped = $true
                 break
