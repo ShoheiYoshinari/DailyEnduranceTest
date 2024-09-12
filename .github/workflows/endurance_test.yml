@@ -112,7 +112,7 @@ jobs:
       - name: Run Process Tests
         run: |
           Write-Output "Starting Mekiki application..."
-          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"(${{ env.mekiki_project }})`"" -NoNewWindow -PassThru | Out-Null
+          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$($env:mekiki_project)`"" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
 
           Write-Output "Checking if Mekiki process is alive..."
