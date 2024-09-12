@@ -20,7 +20,7 @@ env:
   test_dir: "C:/Hutzper/self_host_runner"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
-  mekiki_project: "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
+  mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
   json_output_path: "C:/CSharp.Hutzper.Library/test_endurance/Parsing_result.json"
   results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
