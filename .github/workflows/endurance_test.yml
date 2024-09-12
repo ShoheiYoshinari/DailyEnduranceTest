@@ -135,7 +135,7 @@ jobs:
             exit 1
           }
 
-          # 各プロセスの動作テスト
+          # 動作テスト
           $configFilePath = "${{ env.json_output_path }}"
           if (-Not (Test-Path $configFilePath)) {
             Write-Error "設定ファイル '$configFilePath' が存在しません。"
@@ -149,7 +149,7 @@ jobs:
           $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
 
           $results = @()
-          foreach ($tests in $processSettings.cameras) {
+          foreach ($tests in $processSettings.tests) {
             Write-Output "プロセス: $($tests.name)"
             Write-Output "テスト時間: $($tests.duration_minutes) 分"
             $startTime = Get-Date
