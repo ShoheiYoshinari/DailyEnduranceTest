@@ -15,9 +15,19 @@ on:
         default: 'build'
         type: string
 
+# グローバルに使う変数をenvセクションに定義（小文字）
+env:
+  test_dir: "C:/Hutzper/self_host_runner"
+  repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
+  yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
+  mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
+  yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
+  json_output_path: "C:/CSharp.Hutzper.Library/test_endurance/Parsing_result.json"
+  results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
+
 jobs:
   set_timestamp:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, windows]
     outputs:
       timestamp: ${{ steps.get_timestamp.outputs.timestamp }}
     steps:
@@ -29,7 +39,7 @@ jobs:
     runs-on: [self-hosted, windows]
     needs: set_timestamp
     env:
-      TIMESTAMP: ${{ needs.set_timestamp.outputs.timestamp }}
+      timestamp: ${{ needs.set_timestamp.outputs.timestamp }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -38,28 +48,27 @@ jobs:
 
       - name: Prepare Mekiki Directory
         run: |
-          $projectDir = "C:\CSharp.Hutzper.Library"
-          $repositoryUrl = "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
           $branch = '${{ github.ref_name }}'
 
-          # branchがmainのとき、developに変更（のちに変更）
+          # branchがmainのとき、developに変更
           if ($branch -eq 'main') {
             $branch = 'develop'
           }
-          if (-Not (Test-Path $projectDir)) {
-            git clone $repositoryUrl $projectDir
+
+          if (-Not (Test-Path "${{ env.test_dir }}")) {
+            git clone ${{ env.repository_url }} ${{ env.test_dir }}
           } else {
-            Set-Location -Path $projectDir
+            Set-Location -Path ${{ env.test_dir }}
             git fetch origin
             git checkout $branch
             git pull origin $branch
           }
         shell: powershell
 
-      - name: Restore and Build YamlParser Project
+      - name: Restore and build YamlParser
         run: |
-          dotnet restore C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj
-          dotnet build C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj -c Release
+          dotnet restore ${{ env.yaml_parser_proj }}
+          dotnet build ${{ env.yaml_parser_proj }} -c Release
         shell: powershell
 
       - name: Build or Publish Project
@@ -68,12 +77,11 @@ jobs:
           if ([string]::IsNullOrEmpty($operation)) {
             $operation = 'build'
           }
-          $projectFile = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
 
           if ($operation -eq 'build') {
-            dotnet build $projectFile -c Release
+            dotnet build ${{ env.mekiki_project }} -c Release
           } elseif ($operation -eq 'publish') {
-            dotnet publish $projectFile -c Release -o "C:\CSharp.Hutzper.Library\publish"
+            dotnet publish ${{ env.mekiki_project }} -c Release -o "${{ env.test_dir }}/publish"
           } else {
             Write-Error "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
             exit 1
@@ -83,11 +91,11 @@ jobs:
       - name: Parse YAML File and Write to JSON
         run: |
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
-          $yamlFilePath = "C:\CSharp.Hutzper.Library\test_endurance\settings\$yamlFileName"
-          $jsonOutputPath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
+          $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
+          $jsonOutputPath = "${{ env.json_output_path }}"
 
           # C#アプリケーションでYAMLファイルをJSONに変換
-          dotnet run --project C:\CSharp.Hutzper.Library\test_endurance\YamlParser\YamlParser.csproj -- $yamlFilePath $jsonOutputPath
+          dotnet run --project ${{ env.yaml_parser_proj }} -- $yamlFilePath $jsonOutputPath
 
           if (-Not (Test-Path $jsonOutputPath)) {
             Write-Error "JSON出力ファイル '$jsonOutputPath' が作成されていません。"
@@ -98,18 +106,17 @@ jobs:
           Get-Content $jsonOutputPath
         shell: powershell
 
-      - name: Run Camera Tests
+      - name: Run Process Tests
         run: |
           Write-Output "Starting Mekiki application..."
-          $projectPath = "C:\CSharp.Hutzper.Library\Hutzper.Library.FormsMekiki\Hutzper.Project.Mekiki.csproj"
-          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$projectPath`"" -NoNewWindow -PassThru | Out-Null
+          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$({{ env.mekiki_project }})`"" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
 
           Write-Output "Checking if Mekiki process is alive..."
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(1)
-          
+
           while ((Get-Date) -lt $endTime) {
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
 
@@ -125,49 +132,48 @@ jobs:
             exit 1
           }
 
-          # 各カメラの動作テスト
-          $configFilePath = "C:\CSharp.Hutzper.Library\test_endurance\Parsing_result.json"
+          # 各プロセスの動作テスト
+          $configFilePath = "${{ env.json_output_path }}"
           if (-Not (Test-Path $configFilePath)) {
             Write-Error "設定ファイル '$configFilePath' が存在しません。"
             exit 1
           }
 
           $configContent = Get-Content $configFilePath | Out-String
-          $cameraSettings = $configContent | ConvertFrom-Json
+          $processSettings = $configContent | ConvertFrom-Json
 
-          $timestamp = '${{ env.TIMESTAMP }}'
-          $resultsFilePath = "C:\CSharp.Hutzper.Library\test_endurance\result\test_results_$timestamp.txt"
+          $timestamp = '${{ env.timestamp }}'
+          $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
 
           $results = @()
-          foreach ($camera in $cameraSettings.cameras) {
-            Write-Output "カメラ: $($camera.name)"
-            Write-Output "テスト時間: $($camera.duration_minutes) 分"
-            $processName = "Hutzper.Project.Mekiki"
+          foreach ($tests in $processSettings.cameras) {
+            Write-Output "プロセス: $($tests.name)"
+            Write-Output "テスト時間: $($tests.duration_minutes) 分"
             $startTime = Get-Date
-            $endTime = $startTime.AddMinutes($camera.duration_minutes)
+            $endTime = $startTime.AddMinutes($tests.duration_minutes)
 
-            Write-Output "カメラ $($camera.name) のテストを開始します"
-            $cameraStopped = $false
+            Write-Output "プロセス $($tests.name) のテストを開始します"
+            $processStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if (-Not $process) {
-                Write-Output "$($deadTime): カメラ $($camera.name) が停止しました"
-                $results += "$($deadTime): $($camera.name): Failure"
-                $cameraStopped = $true
+                Write-Output "$($deadTime): プロセス $($tests.name) が停止しました"
+                $results += "$($deadTime): $($tests.name): Failure"
+                $processStopped = $true
                 break
               } else {
-                Write-Output "$($deadTime): カメラ $($camera.name) は動作しています"
+                Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
               }
             }
             # 結果を保存
-            if (-Not $cameraStopped) {
-              Write-Output "カメラ $($camera.name) のテストが成功しました"
-              $results += "$($camera.name): Success"
+            if (-Not $processStopped) {
+              Write-Output "プロセス $($tests.name) のテストが成功しました"
+              $results += "$($tests.name): Success"
             } else {
-              Write-Output "カメラ $($camera.name) のテストが失敗しました"
-              $results += "$($camera.name): Failure"
+              Write-Output "プロセス $($tests.name) のテストが失敗しました"
+              $results += "$($tests.name): Failure"
               $results | Out-File -FilePath $resultsFilePath -Append
               Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
               exit 1
@@ -175,27 +181,4 @@ jobs:
           }
           $results | Out-File -FilePath $resultsFilePath -Append
           Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-
-      - name: Send Slack Notification
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          TIMESTAMP: ${{ env.TIMESTAMP }}
-        run: |
-          $resultsFilePath = "C:/CSharp.Hutzper.Library/test_endurance/result/test_results_${{ env.TIMESTAMP }}.txt"
-          
-          if (Test-Path $resultsFilePath) {
-            $results = Get-Content $resultsFilePath | Out-String
-          } else {
-            $results = "結果ファイルが見つかりませんでした。"
-          }
-
-          $status = "${{ job.status }}"
-
-          $payload = @{
-            text = "カメラ耐久テスト結果: $status`n`nテスト結果:`n$results"
-          }
-
-          $jsonPayload = $payload | ConvertTo-Json -Compress
-
-          Invoke-RestMethod -Uri $env:SLACK_WEBHOOK_URL -Method Post -ContentType 'application/json' -Body $jsonPayload
         shell: powershell
