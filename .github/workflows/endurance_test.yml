@@ -158,6 +158,9 @@ jobs:
                 $logDate = Get-Date -Format "HH:mm:ss"
                 [DateTime]::ParseExact($logTimestamp, "HH:mm:ss", $null) -gt [DateTime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)
               }
+              Write-Output "Current log content:"
+              Write-Output $logContent
+
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($logContent -match "異常") {
                 Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
