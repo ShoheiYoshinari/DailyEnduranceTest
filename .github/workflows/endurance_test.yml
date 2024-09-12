@@ -18,13 +18,12 @@ on:
           - 'publish'
         default: 'build'
 
-# グローバルに使う変数をenvセクションに定義（小文字）
 env:
   test_dir: "C:/Hutzper/self_host_runner"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
-  #yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
   mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
+  log_dir: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
   results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
 
 jobs:
@@ -55,7 +54,6 @@ jobs:
         run: |
           $branch = '${{ github.ref_name }}'
 
-          # branchがmainのとき、developに変更
           if ($branch -eq 'main') {
             $branch = 'develop'
           }
@@ -69,11 +67,6 @@ jobs:
             git pull origin $branch
           }
         shell: powershell
-
-      ##- name: Restore and build YamlParser
-      ##    dotnet restore ${{ env.yaml_parser_proj }}
-      ##    dotnet build ${{ env.yaml_parser_proj }} -c Release
-      ##  shell: powershell
 
       - name: Build or Publish Project
         run: |
@@ -107,7 +100,6 @@ jobs:
             exit 1
           }
 
-          # YAMLファイルを読み込む
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $processSettings = $yamlContent | ConvertFrom-Yaml
 
@@ -136,6 +128,8 @@ jobs:
           }
 
           # 動作テスト
+          $dateSuffix = Get-Date -Format "yyyyMMdd"
+          $logFilePath = "${{ env.log_dir }}\log_$dateSuffix.log"
           $timestamp = '${{ env.timestamp }}'
           $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
 
@@ -150,18 +144,20 @@ jobs:
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
-              $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              if (-Not $process) {
-                Write-Output "$($deadTime): プロセス $($tests.name) が停止しました"
-                $results += "$($deadTime): $($tests.name): Failure"
-                $processStopped = $true
-                break
-              } else {
-                Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
+              if (Test-Path $logFilePath) {
+                $logContent = Get-Content $logFilePath
+                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                if ($logContent -match "異常") {
+                  Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
+                  $errorLines = $logContent | Select-String "異常" | ForEach-Object { $_.Line }
+                  $results += $errorLines
+                  $processStopped = $true
+                  break
+                } else {
+                  Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
+                }
               }
             }
-            # 結果を保存
             if (-Not $processStopped) {
               Write-Output "プロセス $($tests.name) のテストが成功しました"
               $results += "$($tests.name): Success"
