@@ -24,8 +24,7 @@ env:
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   yaml_parser_proj: "C:/CSharp.Hutzper.Library/test_endurance/YamlParser/YamlParser.csproj"
   mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
-  yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
-  json_output_path: "C:/CSharp.Hutzper.Library/test_endurance/Parsing_result.json"
+  #yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
   results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
 
 jobs:
@@ -94,26 +93,25 @@ jobs:
           }
         shell: powershell
 
-      - name: Parse YAML File and Write to JSON
+      - name: Install PowerShell-Yaml Module
+        run: |
+          Install-Module -Name powershell-yaml -Scope CurrentUser -Force
+        shell: powershell
+
+      - name: Read YAML File and Run Process Tests
         run: |
           $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
-          $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
-          $jsonOutputPath = "${{ env.json_output_path }}"
-
-          # C#アプリケーションでYAMLファイルをJSONに変換
-          dotnet run --project ${{ env.yaml_parser_proj }} -- $yamlFilePath $jsonOutputPath
-
-          if (-Not (Test-Path $jsonOutputPath)) {
-            Write-Error "JSON出力ファイル '$jsonOutputPath' が作成されていません。"
+          # $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
+          
+          if (-Not (Test-Path $yamlFilePath)) {
+            Write-Error "YAMLファイル '$yamlFilePath' が存在しません。"
             exit 1
           }
 
-          # 結果を表示
-          Get-Content $jsonOutputPath
-        shell: powershell
+          # YAMLファイルを読み込む
+          $yamlContent = Get-Content $yamlFilePath | Out-String
+          $processSettings = $yamlContent | ConvertFrom-Yaml
 
-      - name: Run Process Tests
-        run: |
           Write-Output "Starting Mekiki application..."
           Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$($env:mekiki_project)`"" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
@@ -139,15 +137,6 @@ jobs:
           }
 
           # 動作テスト
-          $configFilePath = "${{ env.json_output_path }}"
-          if (-Not (Test-Path $configFilePath)) {
-            Write-Error "設定ファイル '$configFilePath' が存在しません。"
-            exit 1
-          }
-
-          $configContent = Get-Content $configFilePath | Out-String
-          $processSettings = $configContent | ConvertFrom-Json
-
           $timestamp = '${{ env.timestamp }}'
           $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
 
