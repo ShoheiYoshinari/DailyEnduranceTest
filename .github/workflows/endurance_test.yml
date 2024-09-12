@@ -174,7 +174,7 @@ jobs:
                   }
                 }
               }
-              $logResults += $filteredLines
+              $logResults = $filteredLines
 
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($filteredLines -match "異常") {
