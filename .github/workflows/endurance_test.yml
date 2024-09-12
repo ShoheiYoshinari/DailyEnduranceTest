@@ -153,25 +153,35 @@ jobs:
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
 
-              ##$logContent = Get-Content $logFilePath | Where-Object { $_ -match "^\d{2}:\d{2}:\d{2}" } | Where-Object {
-              ##  $logDate = Get-Date -Format "HH:mm:ss"
-              ##  [DateTime]::ParseExact($logTimestamp, "HH:mm:ss", $null) -gt [DateTime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)
-              ##}
-              
               $logContent = Get-Content $logFilePath -Raw
               Write-Output "Current log content:"
               Write-Output $logContent
 
+              $logLines = $logContent -split "`n"
+              $filteredLines = @()
+              foreach ($line in $logLines) {
+                if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
+                  $lineTimestamp = $matches[0]
+                  $lineTime = [datetime]::ParseExact($lineTimestamp, "HH:mm:ss.fff", $null)
+
+                  if ($lineTime -gt [datetime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)) {
+                    $filteredLines += $line
+                  }
+                }
+              }
+
+              Write-Output "Filtered log content:"
+              $filteredLines | ForEach-Object { Write-Output $_ }
+
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              if ($logContent -match "異常") {
+              if ($filteredLines -match "異常") {
                 Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
-                $errorLines = $logContent | Select-String "異常" | ForEach-Object { $_.Line }
+                $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += $errorLines
                 $processStopped = $true
                 break
               } else {
                 Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
-
               }
             }
             if (-Not $processStopped) {
