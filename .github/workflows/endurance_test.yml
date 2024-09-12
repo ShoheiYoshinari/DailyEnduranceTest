@@ -31,6 +31,7 @@ jobs:
     runs-on: [self-hosted, windows]
     outputs:
       timestamp: ${{ steps.get_timestamp.outputs.timestamp }}
+      date_suffix: ${{ steps.get_date_suffix.outputs.date_suffix }}
     steps:
       - name: Get Current Timestamp
         id: get_timestamp
@@ -39,11 +40,19 @@ jobs:
           echo "::set-output name=timestamp::$timestamp"
         shell: powershell
 
+      - name: Get Date Suffix
+        id: get_date_suffix
+        run: |
+          $dateSuffix = (Get-Date -Format "yyyyMMdd")
+          echo "::set-output name=date_suffix::$dateSuffix"
+        shell: powershell
+
   endurance_test_mekiki:
     runs-on: [self-hosted, windows]
     needs: set_timestamp
     env:
       timestamp: ${{ needs.set_timestamp.outputs.timestamp }}
+      date_suffix: ${{ needs.set_timestamp.outputs.date_suffix }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -128,8 +137,7 @@ jobs:
           }
 
           # 動作テスト
-          $dateSuffix = Get-Date -Format "yyyyMMdd"
-          $logFilePath = "${{ env.log_dir }}\log_$dateSuffix.log"
+          $logFilePath = "${{ env.log_dir }}/${{ env.date_suffix }}.log"
           $timestamp = '${{ env.timestamp }}'
           $resultsFilePath = "${{ env.results_dir }}\test_results_$timestamp.txt"
 
@@ -144,18 +152,17 @@ jobs:
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
-              if (Test-Path $logFilePath) {
-                $logContent = Get-Content $logFilePath
-                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                if ($logContent -match "異常") {
-                  Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
-                  $errorLines = $logContent | Select-String "異常" | ForEach-Object { $_.Line }
-                  $results += $errorLines
-                  $processStopped = $true
-                  break
-                } else {
-                  Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
-                }
+
+              $logContent = Get-Content $logFilePath
+              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              if ($logContent -match "異常") {
+                Write-Output "$($deadTime): プロセス $($tests.name) が異常を検知しました"
+                $errorLines = $logContent | Select-String "異常" | ForEach-Object { $_.Line }
+                $results += $errorLines
+                $processStopped = $true
+                break
+              } else {
+                Write-Output "$($deadTime): プロセス $($tests.name) は動作しています"
               }
             }
             if (-Not $processStopped) {
