@@ -32,9 +32,9 @@ jobs:
     runs-on: [self-hosted, windows]
     steps:
       - name: Set PowerShell Execution Policy
-        shell: pwsh
         run: |
           Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+        shell: powershell
       
       - name: Get Current Timestamp and Date Suffix
         id: get_timestamp_and_suffix
