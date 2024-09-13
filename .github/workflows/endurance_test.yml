@@ -19,7 +19,7 @@ on:
         default: 'build'
 
 env:
-  test_dir: "C:/Hutzper/self_host_runner"
+  test_dir: "C:/CSharp.Hutzper.Library"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
