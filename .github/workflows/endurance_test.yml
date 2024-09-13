@@ -27,33 +27,18 @@ env:
   base_results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
 
 jobs:
-  set_timestamp:
+  endurance_test_mekiki:
     runs-on: [self-hosted, windows]
-    outputs:
-      timestamp: ${{ steps.get_timestamp.outputs.timestamp }}
-      date_suffix: ${{ steps.get_date_suffix.outputs.date_suffix }}
     steps:
-      - name: Get Current Timestamp
-        id: get_timestamp
+      - name: Get Current Timestamp and Date Suffix
+        id: get_timestamp_and_suffix
         run: |
           $timestamp = (Get-Date -Format "yyyyMMdd-HHmmss")
-          echo "::set-output name=timestamp::$timestamp"
-        shell: powershell
-
-      - name: Get Date Suffix
-        id: get_date_suffix
-        run: |
           $dateSuffix = (Get-Date -Format "yyyyMMdd")
+          echo "::set-output name=timestamp::$timestamp"
           echo "::set-output name=date_suffix::$dateSuffix"
         shell: powershell
 
-  endurance_test_mekiki:
-    runs-on: [self-hosted, windows]
-    needs: set_timestamp
-    env:
-      timestamp: ${{ needs.set_timestamp.outputs.timestamp }}
-      date_suffix: ${{ needs.set_timestamp.outputs.date_suffix }}
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
@@ -101,6 +86,9 @@ jobs:
 
       - name: Read YAML File and Run Process Tests
         run: |
+          $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
+          $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
+
           $yamlFileName = if ($null -eq '${{ github.event.inputs.yaml_file }}') { 'weekdays.yml' } else { '${{ github.event.inputs.yaml_file }}.yml' }
           $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
           
@@ -137,16 +125,15 @@ jobs:
           }
 
           # 日付ごとのフォルダを作成
-          $dateFolder = "${{ env.base_results_dir }}/$($env.date_suffix)"
+          $dateFolder = "${{ env.base_results_dir }}/$date_suffix"
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
 
           # 動作テスト
-          $logFilePath = "${{ env.log_dir }}/${{ env.date_suffix }}.log"
-          $timestamp = '${{ env.timestamp }}'
-          $resultsFilePath = "${dateFolder}\test_results_$timestamp.txt"
-          $logResultsFilePath = "${dateFolder}\log_results_$timestamp.txt"
+          $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
+          $resultsFilePath = "${dateFolder}/test_results_$timestamp.txt"
+          $logResultsFilePath = "${dateFolder}/log_results_$timestamp.txt"
 
           $results = @()
           $logResults = @()
