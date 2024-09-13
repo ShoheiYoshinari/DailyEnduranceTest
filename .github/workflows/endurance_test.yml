@@ -31,6 +31,10 @@ jobs:
   endurance_test_mekiki:
     runs-on: [self-hosted, windows]
     steps:
+      - name: Set PowerShell Execution Policy
+        run: |
+          powershell -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force"
+      
       - name: Get Current Timestamp and Date Suffix
         id: get_timestamp_and_suffix
         run: |
