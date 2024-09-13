@@ -101,7 +101,12 @@ jobs:
           $processSettings = $yamlContent | ConvertFrom-Yaml
 
           Write-Output "Starting Mekiki application..."
-          Start-Process -FilePath "dotnet" -ArgumentList "run --project `"$($env:mekiki_project)`"" -NoNewWindow -PassThru | Out-Null
+          $vsPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"
+          if (-Not (Test-Path $vsPath)) {
+            Write-Error "Visual Studio のパスが見つかりません。"
+            exit 1
+          }
+          Start-Process -FilePath $vsPath -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
 
           Write-Output "Checking if Mekiki process is alive..."
