@@ -53,9 +53,9 @@ jobs:
       - name: Prepare Mekiki Directory
         run: |
           $branch = '${{ github.ref_name }}'
-
+          #後にdevelopに変更
           if ($branch -eq 'main') {
-            $branch = 'develop'
+            $branch = 'test_endurance'
           }
 
           if (-Not (Test-Path "${{ env.test_dir }}")) {
