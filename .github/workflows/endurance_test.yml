@@ -7,11 +7,11 @@ on:
     inputs:
       yaml_file:
         description: '読み込むYAMLファイルの名前 (拡張子なし)'
-        required: true
+        required: false
         default: 'weekdays'
       build_or_publish:
         description: 'ビルドまたは公開 (build または publish)'
-        required: true
+        required: false
         type: choice
         options:
           - 'build'
@@ -101,7 +101,7 @@ jobs:
 
       - name: Read YAML File and Run Process Tests
         run: |
-          $yamlFileName = '${{ github.event.inputs.yaml_file }}.yml'
+          $yamlFileName = if ($null -eq '${{ github.event.inputs.yaml_file }}') { 'weekdays.yml' } else { '${{ github.event.inputs.yaml_file }}.yml' }
           $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
           
           if (-Not (Test-Path $yamlFilePath)) {
