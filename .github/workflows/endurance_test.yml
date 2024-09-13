@@ -19,12 +19,12 @@ on:
         default: 'build'
 
 env:
-  test_dir: "C:/Hutzper/self_host_runner"
+  test_dir: "C:/CSharp.Hutzper.Library"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
-  mekiki_project: "C:/Hutzper/self_host_runner/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
-  yaml_settings_dir: "C:/Hutzper/self_host_runner/test_endurance/settings"
-  log_dir: "C:/Hutzper/self_host_runner/Hutzper.Library.FormsMekiki/bin/x64/log"
-  base_results_dir: "C:/Hutzper/self_host_runner/test_endurance/result"
+  mekiki_project: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
+  yaml_settings_dir: "C:/CSharp.Hutzper.Library/test_endurance/settings"
+  log_dir: "C:/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
+  base_results_dir: "C:/CSharp.Hutzper.Library/test_endurance/result"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"  # Visual Studio のパス
 
 jobs:
