@@ -48,7 +48,6 @@ jobs:
       - name: Prepare Mekiki Directory
         run: |
           $branch = '${{ github.ref_name }}'
-          #後にdevelopに変更
           if ($branch -eq 'main') {
             $branch = 'test_endurance'
           }
@@ -90,7 +89,9 @@ jobs:
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
 
-          $yamlFileName = if ($null -eq '${{ github.event.inputs.yaml_file }}') { 'weekdays.yml' } else { '${{ github.event.inputs.yaml_file }}.yml' }
+          # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
+          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
+          $yamlFileName = if ($null -eq $yamlFileInput) { 'weekdays.yml' } else { "$yamlFileInput.yml" }
           $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
           
           if (-Not (Test-Path $yamlFilePath)) {
