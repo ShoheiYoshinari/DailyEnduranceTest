@@ -47,11 +47,11 @@ jobs:
         shell: powershell
 
       - name: Checkout Repository and Prepare Branch
-        run: scripts\prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
+        run: ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
         shell: powershell
 
       - name: Build or Publish Mekiki Project
-        run: scripts\build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+        run: ./scripts/build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
@@ -94,5 +94,5 @@ jobs:
           $resultsFilePath = "${{ env.base_results_dir }}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
           $logResultsFilePath = "${{ env.base_results_dir }}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
 
-          scripts\test_process.ps1 -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$(Get-Date -Format yyyyMMdd).log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
+          ./scripts/test_process.ps1 -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$(Get-Date -Format yyyyMMdd).log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
         shell: powershell
