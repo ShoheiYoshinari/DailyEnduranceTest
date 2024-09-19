@@ -91,7 +91,10 @@ jobs:
 
           # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
           $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
-          $yamlFileName = if ($null -eq $yamlFileInput) { 'weekdays.yml' } else { "$yamlFileInput.yml" }
+          if($yamlFileInput -eq '') {
+            $yamlFileInput = 'weekdays'
+          }
+          $yamlFileName = "$yamlFileInput.yml"
           $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
           
           if (-Not (Test-Path $yamlFilePath)) {
