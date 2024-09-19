@@ -34,59 +34,47 @@ jobs:
       - name: Get Current Timestamp and Date Suffix
         id: get_timestamp_and_suffix
         run: |
-          function Get-Timestamp {
-            (Get-Date -Format "yyyyMMdd-HHmmss")
-          }
-          function Get-DateSuffix {
-            (Get-Date -Format "yyyyMMdd")
-          }
-          $timestamp = Get-Timestamp
-          $dateSuffix = Get-DateSuffix
+          $timestamp = (Get-Date -Format "yyyyMMdd-HHmmss")
+          $dateSuffix = (Get-Date -Format "yyyyMMdd")
           echo "::set-output name=timestamp::$timestamp"
           echo "::set-output name=date_suffix::$dateSuffix"
         shell: powershell
 
       - name: Checkout Repository and Prepare Branch
         run: |
-          function Prepare-Repository {
-            param ($repoUrl, $dir, $branch)
-            if (-Not (Test-Path $dir)) {
-              git clone $repoUrl $dir
-            } else {
-              Set-Location -Path $dir
-              git fetch origin
-              git checkout $branch
-              git pull origin $branch
-            }
-          }
-
+          $repoUrl = "${{ env.repository_url }}"
+          $dir = "${{ env.test_dir }}"
           $branch = '${{ github.ref_name }}'
           if ($branch -eq 'main') {
             $branch = 'test_endurance'
           }
 
-          Prepare-Repository -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch $branch
+          if (-Not (Test-Path $dir)) {
+            git clone $repoUrl $dir
+          } else {
+            Set-Location -Path $dir
+            git fetch origin
+            git checkout $branch
+            git pull origin $branch
+          }
         shell: powershell
 
       - name: Build or Publish Mekiki Project
         run: |
-          function Build-Or-Publish {
-            param ($operation, $projectPath, $outputDir)
-            if ($operation -eq 'build') {
-              dotnet build $projectPath -c Release
-            } elseif ($operation -eq 'publish') {
-              dotnet publish $projectPath -c Release -o $outputDir
-            } else {
-              throw "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
-            }
-          }
-
           $operation = '${{ github.event.inputs.build_or_publish }}'
           if (-Not $operation) {
             $operation = 'build'
           }
 
-          Build-Or-Publish -operation $operation -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+          $projectPath = "${{ env.mekiki_project }}"
+          if ($operation -eq 'build') {
+            dotnet build $projectPath -c Release
+          } elseif ($operation -eq 'publish') {
+            $outputDir = "${{ env.test_dir }}/publish"
+            dotnet publish $projectPath -c Release -o $outputDir
+          } else {
+            throw "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
+          }
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
@@ -96,22 +84,26 @@ jobs:
 
       - name: Read YAML File and Start Mekiki Tests
         run: |
-          function Read-YamlFile {
-            param ($yamlFilePath)
-            $yamlContent = Get-Content $yamlFilePath | Out-String
-            $yamlContent | ConvertFrom-Yaml
+          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
+          if (-Not $yamlFileInput) {
+            $yamlFileInput = 'weekdays'
+          }
+          $yamlFilePath = "${{ env.yaml_settings_dir }}/$yamlFileInput.yml"
+          if (-Not (Test-Path $yamlFilePath)) {
+            throw "YAMLファイル '$yamlFilePath' が存在しません。"
           }
 
-          function Check-Process {
-            param ($processName)
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-            return $process -ne $null
-          }
+          $processSettings = (Get-Content $yamlFilePath | ConvertFrom-Yaml)
+          $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
+          $logFilePath = "${{ env.log_dir }}/$timestamp.log"
+          $resultsFilePath = "${{ env.base_results_dir }}/$timestamp.txt"
+
+          
 
           function Test-Process {
-            param ($processSettings, $logFilePath, $resultsFilePath, $timestamp)
+            param ($processSettings, $logFilePath, $resultsFilePath)
             $results = @()
-            foreach ($test in $processSettings.tests) {
+            foreach ($test in $processSettings.cameras) {
               $endTime = (Get-Date).AddMinutes($test.duration_minutes)
               while ((Get-Date) -lt $endTime) {
                 Start-Sleep -Seconds 5
@@ -131,22 +123,5 @@ jobs:
             $results | Out-File $resultsFilePath
           }
 
-          # YAMLファイルの読み込み
-          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
-          if (-Not $yamlFileInput) {
-            $yamlFileInput = 'weekdays'
-          }
-          $yamlFilePath = "${{ env.yaml_settings_dir }}/$yamlFileInput.yml"
-          if (-Not (Test-Path $yamlFilePath)) {
-            throw "YAMLファイル '$yamlFilePath' が存在しません。"
-          }
-
-          $processSettings = Read-YamlFile -yamlFilePath $yamlFilePath
-
-          # Mekikiのプロセス確認
-          $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
-          $logFilePath = "${{ env.log_dir }}/$timestamp.log"
-          $resultsFilePath = "${{ env.base_results_dir }}/$timestamp.txt"
-
-          Test-Process -processSettings $processSettings -logFilePath $logFilePath -resultsFilePath $resultsFilePath -timestamp $timestamp
+          Test-Process -processSettings $processSettings -logFilePath $logFilePath -resultsFilePath $resultsFilePath
         shell: powershell
