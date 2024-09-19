@@ -46,6 +46,12 @@ jobs:
           echo "::set-output name=date_suffix::$dateSuffix"
         shell: powershell
 
+
+      - name: List Files
+        run: |
+          ls .\scripts\
+        shell: powershell
+
       - name: Checkout Repository and Prepare Branch
         run: .\scripts\prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
         shell: powershell
