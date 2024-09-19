@@ -1,4 +1,4 @@
-name: Build and Run Mekiki
+name: Build and Run Mekiki test
 
 on:
   schedule:
