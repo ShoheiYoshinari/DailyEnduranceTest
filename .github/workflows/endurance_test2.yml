@@ -48,7 +48,7 @@ jobs:
 
       - name: Checkout Repository and Prepare Branch
         ##run: ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
-        run: ./scripts/prepare_repository.ps1 -repoUrl "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git" -dir "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library" -branch 'main'
+        run: ./scripts/prepare_repository.ps1 -repoUrl "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git" -dir "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library" -branch 'test_endurance'
         shell: powershell
 
       - name: Build or Publish Mekiki Project
