@@ -138,11 +138,16 @@ jobs:
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
+          # testごとのフォルダ作成
+          $testsFolder = "${dateFolder}/$timestamp"
+          if (-Not (Test-Path $testsFolder)) {
+            New-Item -Path $testsFolder -ItemType Directory | Out-Null
+          }
 
           # 動作テスト
           $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
-          $resultsFilePath = "${dateFolder}/test_results_$timestamp.txt"
-          $logResultsFilePath = "${dateFolder}/log_results_$timestamp.txt"
+          $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
+          $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
 
           $results = @()
           $logResults = @()
