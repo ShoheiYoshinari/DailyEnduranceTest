@@ -128,7 +128,6 @@ jobs:
             New-Item -Path $testsFolder -ItemType Directory | Out-Null
           }
 
-          $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
           $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
           $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
 
