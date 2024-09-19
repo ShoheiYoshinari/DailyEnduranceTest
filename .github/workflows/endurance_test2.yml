@@ -93,16 +93,15 @@ jobs:
             Write-Error "Visual Studio のパスが見つかりません。"
             exit 1
           }
-          Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
-          Start-Sleep -Seconds 5
 
           Write-Output "Checking if Mekiki process is alive..."
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
-          $endTime = $startTime.AddMinutes(5)
+          $endTime = $startTime.AddMinutes(1)
 
           Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
           Start-Sleep -Seconds 5
+
           while ((Get-Date) -lt $endTime) {
             $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
 
