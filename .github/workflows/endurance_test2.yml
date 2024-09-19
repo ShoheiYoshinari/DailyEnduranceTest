@@ -34,14 +34,8 @@ jobs:
       - name: Get Current Timestamp and Date Suffix
         id: get_timestamp_and_suffix
         run: |
-          function Get-Timestamp {
-            (Get-Date -Format "yyyyMMdd-HHmmss")
-          }
-          function Get-DateSuffix {
-            (Get-Date -Format "yyyyMMdd")
-          }
-          $timestamp = Get-Timestamp
-          $dateSuffix = Get-DateSuffix
+          $timestamp = (Get-Date -Format "yyyyMMdd-HHmmss")
+          $dateSuffix = (Get-Date -Format "yyyyMMdd")
           echo "::set-output name=timestamp::$timestamp"
           echo "::set-output name=date_suffix::$dateSuffix"
         shell: powershell
@@ -57,10 +51,6 @@ jobs:
 
       - name: Build or Publish Mekiki Project
         run: |
-          $operation = "${{ github.event.inputs.build_or_publish }}"
-          if ([string]::IsNullOrEmpty($operation)) {
-            $operation = "build"
-          }
           ./scripts/build_or_publish.ps1 -operation "${{ github.event.inputs.build_or_publish }}" -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
 
@@ -70,66 +60,5 @@ jobs:
         shell: powershell
 
       - name: Read YAML File and Start Mekiki Tests
-        run: |
-          function Read-YamlFile {
-            param ($yamlFilePath)
-            $yamlContent = Get-Content $yamlFilePath | Out-String
-            $yamlContent | ConvertFrom-Yaml
-          }
-
-          $yamlFileInput = "${{ github.event.inputs.yaml_file }}"
-          if (-Not $yamlFileInput) {
-            $yamlFileInput = "weekdays"
-          }
-          $yamlFilePath = "${{ env.yaml_settings_dir }}/$yamlFileInput.yml"
-          if (-Not (Test-Path $yamlFilePath)) {
-            throw "YAMLファイル '$yamlFilePath' が存在しません。"
-          }
-
-          $processSettings = Read-YamlFile -yamlFilePath $yamlFilePath
-
-          Write-Output "Starting Mekiki application..."
-          if (-Not (Test-Path "${{ env.vs_path }}")) {
-            Write-Error "Visual Studio のパスが見つかりません。"
-            exit 1
-          }
-
-          Write-Output "Checking if Mekiki process is alive..."
-          $processName = "Hutzper.Project.Mekiki"
-          $startTime = Get-Date
-          $endTime = $startTime.AddMinutes(1)
-
-          Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
-          Start-Sleep -Seconds 5
-
-          while ((Get-Date) -lt $endTime) {
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-
-            if ($process) {
-              Write-Output "$processName is running."
-              break
-            }
-            Start-Sleep -Seconds 5
-          }
-
-          if (-Not $process) {
-            Write-Output "$processName has stopped within the 1-minute check period."
-            exit 1
-          }
-
-          # 日付ごとのフォルダを作成
-          $dateFolder = "${{ env.base_results_dir }}/$date_suffix"
-          if (-Not (Test-Path $dateFolder)) {
-            New-Item -Path $dateFolder -ItemType Directory | Out-Null
-          }
-          # testごとのフォルダ作成
-          $testsFolder = "${dateFolder}/$timestamp"
-          if (-Not (Test-Path $testsFolder)) {
-            New-Item -Path $testsFolder -ItemType Directory | Out-Null
-          }
-
-          $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
-          $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
-
-          ./scripts/test_abnormality.ps1 -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$(Get-Date -Format yyyyMMdd).log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
+        run: ./scripts/start_mekiki_tests.ps1 -yamlFileInput "${{ github.event.inputs.yaml_file }}" -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}" -dateSuffix "${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}"
         shell: powershell
