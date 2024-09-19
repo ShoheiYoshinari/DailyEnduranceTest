@@ -25,7 +25,7 @@ env:
   yaml_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
   log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
   base_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
-  vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"  # Visual Studio のパス
+  vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
 
 jobs:
   endurance_test_mekiki:
@@ -45,7 +45,7 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Prepare Mekiki Directory
+      - name: Prepare Mekiki Branch
         run: |
           $branch = '${{ github.ref_name }}'
           if ($branch -eq 'main') {
@@ -62,7 +62,7 @@ jobs:
           }
         shell: powershell
 
-      - name: Build or Publish Project
+      - name: Dotnet Build or Publish 
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
           if ([string]::IsNullOrEmpty($operation)) {
@@ -84,7 +84,7 @@ jobs:
           Install-Module -Name powershell-yaml -Scope CurrentUser -Force
         shell: powershell
 
-      - name: Read YAML File and Run Process Tests
+      - name: Read YAML File and Run Tests
         run: |
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
