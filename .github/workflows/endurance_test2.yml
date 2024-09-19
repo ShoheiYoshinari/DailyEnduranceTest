@@ -50,18 +50,18 @@ jobs:
         run: |
           $branch = '${{ github.ref_name }}'
           if ($branch -eq "main") {
-            $branch = "main"
+            $branch = "test_endurance"
           }
           ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch "test_endurance" ##${ github.ref_name }
         shell: powershell
 
       - name: Build or Publish Mekiki Project
         run: |
-          $operation = '${{ github.event.inputs.build_or_publish }}'
+          $operation = "${{ github.event.inputs.build_or_publish }}"
           if ([string]::IsNullOrEmpty($operation)) {
-            $operation = 'build'
+            $operation = "build"
           }
-          ./scripts/build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+          ./scripts/build_or_publish.ps1 -operation "${{ github.event.inputs.build_or_publish }}" -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
@@ -77,9 +77,9 @@ jobs:
             $yamlContent | ConvertFrom-Yaml
           }
 
-          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
+          $yamlFileInput = "${{ github.event.inputs.yaml_file }}"
           if (-Not $yamlFileInput) {
-            $yamlFileInput = 'weekdays'
+            $yamlFileInput = "weekdays"
           }
           $yamlFilePath = "${{ env.yaml_settings_dir }}/$yamlFileInput.yml"
           if (-Not (Test-Path $yamlFilePath)) {
