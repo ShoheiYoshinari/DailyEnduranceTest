@@ -101,8 +101,37 @@ jobs:
           $startTime = Get-Date
           $endTime = $startTime.AddMinutes(5)
 
-          $resultsFilePath = "${{ env.base_results_dir }}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
-          $logResultsFilePath = "${{ env.base_results_dir }}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
+          Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
+          Start-Sleep -Seconds 5
+          while ((Get-Date) -lt $endTime) {
+            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+
+            if ($process) {
+              Write-Output "$processName is running."
+              break
+            }
+            Start-Sleep -Seconds 5
+          }
+
+          if (-Not $process) {
+            Write-Output "$processName has stopped within the 1-minute check period."
+            exit 1
+          }
+
+          # 日付ごとのフォルダを作成
+          $dateFolder = "${{ env.base_results_dir }}/$date_suffix"
+          if (-Not (Test-Path $dateFolder)) {
+            New-Item -Path $dateFolder -ItemType Directory | Out-Null
+          }
+          # testごとのフォルダ作成
+          $testsFolder = "${dateFolder}/$timestamp"
+          if (-Not (Test-Path $testsFolder)) {
+            New-Item -Path $testsFolder -ItemType Directory | Out-Null
+          }
+
+          $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
+          $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
+          $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
 
           ./scripts/test_abnormality.ps1 -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$(Get-Date -Format yyyyMMdd).log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
         shell: powershell
