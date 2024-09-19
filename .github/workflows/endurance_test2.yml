@@ -52,7 +52,7 @@ jobs:
           if ($branch -eq 'main') {
             $branch = 'test_endurance'
           }
-          ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
+          ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch 'test_endurance' ##${ github.ref_name }
         shell: powershell
 
       - name: Build or Publish Mekiki Project
