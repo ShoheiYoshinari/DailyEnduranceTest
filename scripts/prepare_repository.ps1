@@ -4,6 +4,10 @@ param (
     [string]$branch
 )
 
+if ($branch -eq 'main') {
+  $branch = 'test_endurance'
+}
+
 if (-Not (Test-Path $dir)) {
   git clone $repoUrl $dir
 } else {
