@@ -109,26 +109,59 @@ jobs:
           }
 
           function Test-Process {
-            param ($processSettings, $logFilePath, $resultsFilePath, $timestamp)
+            param ($processSettings, $logFilePath, $resultsFilePath, $logResultsFilePath, $timestamp)
             $results = @()
+            $logResults = @()
             foreach ($test in $processSettings.tests) {
-              $endTime = (Get-Date).AddMinutes($test.duration_minutes)
+              Write-Output "プロセス: $($test.name)"
+              Write-Output "テスト時間: $($test.duration_minutes) 分"
+              $startTime = Get-Date
+              $endTime = $startTime.AddMinutes($test.duration_minutes)
+
+              Write-Output "プロセス $($test.name) のテストを開始します"
+              $processStopped = $false
               while ((Get-Date) -lt $endTime) {
                 Start-Sleep -Seconds 5
+
                 $logContent = Get-Content $logFilePath -Raw
-                if ($logContent -match "異常") {
-                  Write-Output "$($test.name) テスト中に異常が検知されました"
+                $logLines = $logContent -split "`n"
+                $filteredLines = @()
+                foreach ($line in $logLines) {
+                  if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
+                    $lineTimestamp = $matches[0]
+                    $lineTime = [datetime]::ParseExact($lineTimestamp, "HH:mm:ss.fff", $null)
+
+                    if ($lineTime -gt [datetime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)) {
+                      $filteredLines += $line
+                    }
+                  }
+                }
+                $logResults = $filteredLines
+
+                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                if ($filteredLines -match "異常") {
+                  Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
+                  $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                   $results += "$($test.name): Failure"
+                  $errorLines | Out-File -FilePath $resultsFilePath -Append
+                  $logResults | Out-File -FilePath $logResultsFilePath -Append
+                  Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+                  Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+                  $processStopped = $true
                   break
                 } else {
-                  Write-Output "$($test.name) is running"
+                  Write-Output "$($deadTime): $($test.name)は動作しています"
                 }
               }
-              if ($logContent -notmatch "異常") {
+              if (-Not $processStopped) {
+                Write-Output "$($test.name) のテストが成功しました"
                 $results += "$($test.name): Success"
               }
             }
-            $results | Out-File $resultsFilePath
+            $results | Out-File -FilePath $resultsFilePath -Append
+            Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+            $logResults | Out-File -FilePath $logResultsFilePath -Append
+            Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
           }
 
           # YAMLファイルの読み込み
@@ -178,16 +211,8 @@ jobs:
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
 
-          # testごとのフォルダ作成
-          $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
-          $testsFolder = "${dateFolder}/$timestamp"
-          if (-Not (Test-Path $testsFolder)) {
-            New-Item -Path $testsFolder -ItemType Directory | Out-Null
-          }
+          $resultsFilePath = "${dateFolder}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
+          $logResultsFilePath = "${dateFolder}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
 
-          # Mekikiのテスト実行
-          $logFilePath = "${{ env.log_dir }}/$timestamp.log"
-          $resultsFilePath = "${testsFolder}/results.txt"
-
-          Test-Process -processSettings $processSettings -logFilePath $logFilePath -resultsFilePath $resultsFilePath -timestamp $timestamp
+          Test-Process -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$dateSuffix.log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}"
         shell: powershell
