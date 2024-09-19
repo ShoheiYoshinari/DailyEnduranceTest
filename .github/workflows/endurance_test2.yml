@@ -1,0 +1,152 @@
+name: Endurance Test
+
+on:
+  schedule:
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+    inputs:
+      yaml_file:
+        description: '読み込むYAMLファイルの名前 (拡張子なし)'
+        required: false
+        default: 'weekdays'
+      build_or_publish:
+        description: 'ビルドまたは公開 (build または publish)'
+        required: false
+        type: choice
+        options:
+          - 'build'
+          - 'publish'
+        default: 'build'
+
+env:
+  test_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library"
+  repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
+  mekiki_project: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
+  yaml_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
+  log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
+  base_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
+  vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
+
+jobs:
+  endurance_test_mekiki:
+    runs-on: [self-hosted, windows]
+    steps:
+      - name: Get Current Timestamp and Date Suffix
+        id: get_timestamp_and_suffix
+        run: |
+          function Get-Timestamp {
+            (Get-Date -Format "yyyyMMdd-HHmmss")
+          }
+          function Get-DateSuffix {
+            (Get-Date -Format "yyyyMMdd")
+          }
+          $timestamp = Get-Timestamp
+          $dateSuffix = Get-DateSuffix
+          echo "::set-output name=timestamp::$timestamp"
+          echo "::set-output name=date_suffix::$dateSuffix"
+        shell: powershell
+
+      - name: Checkout Repository and Prepare Branch
+        run: |
+          function Prepare-Repository {
+            param ($repoUrl, $dir, $branch)
+            if (-Not (Test-Path $dir)) {
+              git clone $repoUrl $dir
+            } else {
+              Set-Location -Path $dir
+              git fetch origin
+              git checkout $branch
+              git pull origin $branch
+            }
+          }
+
+          $branch = '${{ github.ref_name }}'
+          if ($branch -eq 'main') {
+            $branch = 'test_endurance'
+          }
+
+          Prepare-Repository -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch $branch
+        shell: powershell
+
+      - name: Build or Publish Mekiki Project
+        run: |
+          function Build-Or-Publish {
+            param ($operation, $projectPath, $outputDir)
+            if ($operation -eq 'build') {
+              dotnet build $projectPath -c Release
+            } elseif ($operation -eq 'publish') {
+              dotnet publish $projectPath -c Release -o $outputDir
+            } else {
+              throw "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
+            }
+          }
+
+          $operation = '${{ github.event.inputs.build_or_publish }}'
+          if (-Not $operation) {
+            $operation = 'build'
+          }
+
+          Build-Or-Publish -operation $operation -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+        shell: powershell
+
+      - name: Install PowerShell-Yaml Module
+        run: |
+          Install-Module -Name powershell-yaml -Scope CurrentUser -Force
+        shell: powershell
+
+      - name: Read YAML File and Start Mekiki Tests
+        run: |
+          function Read-YamlFile {
+            param ($yamlFilePath)
+            $yamlContent = Get-Content $yamlFilePath | Out-String
+            $yamlContent | ConvertFrom-Yaml
+          }
+
+          function Check-Process {
+            param ($processName)
+            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+            return $process -ne $null
+          }
+
+          function Test-Process {
+            param ($processSettings, $logFilePath, $resultsFilePath, $timestamp)
+            $results = @()
+            foreach ($test in $processSettings.tests) {
+              $endTime = (Get-Date).AddMinutes($test.duration_minutes)
+              while ((Get-Date) -lt $endTime) {
+                Start-Sleep -Seconds 5
+                $logContent = Get-Content $logFilePath -Raw
+                if ($logContent -match "異常") {
+                  Write-Output "$($test.name) テスト中に異常が検知されました"
+                  $results += "$($test.name): Failure"
+                  break
+                } else {
+                  Write-Output "$($test.name) is running"
+                }
+              }
+              if ($logContent -notmatch "異常") {
+                $results += "$($test.name): Success"
+              }
+            }
+            $results | Out-File $resultsFilePath
+          }
+
+          # YAMLファイルの読み込み
+          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
+          if (-Not $yamlFileInput) {
+            $yamlFileInput = 'weekdays'
+          }
+          $yamlFilePath = "${{ env.yaml_settings_dir }}/$yamlFileInput.yml"
+          if (-Not (Test-Path $yamlFilePath)) {
+            throw "YAMLファイル '$yamlFilePath' が存在しません。"
+          }
+
+          $processSettings = Read-YamlFile -yamlFilePath $yamlFilePath
+
+          # Mekikiのプロセス確認
+          $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
+          $logFilePath = "${{ env.log_dir }}/$timestamp.log"
+          $resultsFilePath = "${{ env.base_results_dir }}/$timestamp.txt"
+
+          Test-Process -processSettings $processSettings -logFilePath $logFilePath -resultsFilePath $resultsFilePath -timestamp $timestamp
+        shell: powershell
