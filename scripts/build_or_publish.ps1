@@ -4,10 +4,6 @@ param (
     [string]$outputDir
 )
 
-if ([string]::IsNullOrEmpty($operation)) {
-  $operation = 'build'
-}
-
 if ($operation -eq 'build') {
   dotnet build $projectPath -c Release
 } elseif ($operation -eq 'publish') {

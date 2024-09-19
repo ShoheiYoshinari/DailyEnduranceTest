@@ -47,11 +47,21 @@ jobs:
         shell: powershell
 
       - name: Checkout Repository and Prepare Branch
-        run: ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
+        run: |
+          $branch = '${{ github.ref_name }}'
+          if ($branch -eq 'main') {
+            $branch = 'test_endurance'
+          }
+          ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
         shell: powershell
 
       - name: Build or Publish Mekiki Project
-        run: ./scripts/build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+        run: |
+          $operation = '${{ github.event.inputs.build_or_publish }}'
+          if ([string]::IsNullOrEmpty($operation)) {
+            $operation = 'build'
+          }
+          ./scripts/build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
