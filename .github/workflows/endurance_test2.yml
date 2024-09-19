@@ -211,8 +211,14 @@ jobs:
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
 
-          $resultsFilePath = "${dateFolder}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
-          $logResultsFilePath = "${dateFolder}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
+          #testごとのフォルダを作成
+          $testsFolder = "${dateFolder}/$timestamp"
+          if (-Not (Test-Path $testsFolder)) {
+            New-Item -Path $testsFolder -ItemType Directory | Out-Null
+          }
+
+          $resultsFilePath = "${testsFolder}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
+          $logResultsFilePath = "${testsFolder}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
 
           Test-Process -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$dateSuffix.log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}"
         shell: powershell
