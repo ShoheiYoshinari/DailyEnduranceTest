@@ -47,46 +47,11 @@ jobs:
         shell: powershell
 
       - name: Checkout Repository and Prepare Branch
-        run: |
-          function Prepare-Repository {
-            param ($repoUrl, $dir, $branch)
-            if (-Not (Test-Path $dir)) {
-              git clone $repoUrl $dir
-            } else {
-              Set-Location -Path $dir
-              git fetch origin
-              git checkout $branch
-              git pull origin $branch
-            }
-          }
-
-          $branch = '${{ github.ref_name }}'
-          if ($branch -eq 'main') {
-            $branch = 'test_endurance'
-          }
-
-          Prepare-Repository -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch $branch
+        run: .\scripts\prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch '${{ github.ref_name }}'
         shell: powershell
 
       - name: Build or Publish Mekiki Project
-        run: |
-          function Build-Or-Publish {
-            param ($operation, $projectPath, $outputDir)
-            if ($operation -eq 'build') {
-              dotnet build $projectPath -c Release
-            } elseif ($operation -eq 'publish') {
-              dotnet publish $projectPath -c Release -o $outputDir
-            } else {
-              throw "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
-            }
-          }
-
-          $operation = '${{ github.event.inputs.build_or_publish }}'
-          if (-Not $operation) {
-            $operation = 'build'
-          }
-
-          Build-Or-Publish -operation $operation -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+        run: .\scripts\build_or_publish.ps1 -operation '${{ github.event.inputs.build_or_publish }}' -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
@@ -102,69 +67,6 @@ jobs:
             $yamlContent | ConvertFrom-Yaml
           }
 
-          function Check-Process {
-            param ($processName)
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-            return $process -ne $null
-          }
-
-          function Test-Process {
-            param ($processSettings, $logFilePath, $resultsFilePath, $logResultsFilePath, $timestamp)
-            $results = @()
-            $logResults = @()
-            foreach ($test in $processSettings.tests) {
-              Write-Output "プロセス: $($test.name)"
-              Write-Output "テスト時間: $($test.duration_minutes) 分"
-              $startTime = Get-Date
-              $endTime = $startTime.AddMinutes($test.duration_minutes)
-
-              Write-Output "プロセス $($test.name) のテストを開始します"
-              $processStopped = $false
-              while ((Get-Date) -lt $endTime) {
-                Start-Sleep -Seconds 5
-
-                $logContent = Get-Content $logFilePath -Raw
-                $logLines = $logContent -split "`n"
-                $filteredLines = @()
-                foreach ($line in $logLines) {
-                  if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
-                    $lineTimestamp = $matches[0]
-                    $lineTime = [datetime]::ParseExact($lineTimestamp, "HH:mm:ss.fff", $null)
-
-                    if ($lineTime -gt [datetime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)) {
-                      $filteredLines += $line
-                    }
-                  }
-                }
-                $logResults = $filteredLines
-
-                $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                if ($filteredLines -match "異常") {
-                  Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
-                  $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
-                  $results += "$($test.name): Failure"
-                  $errorLines | Out-File -FilePath $resultsFilePath -Append
-                  $logResults | Out-File -FilePath $logResultsFilePath -Append
-                  Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-                  Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-                  $processStopped = $true
-                  break
-                } else {
-                  Write-Output "$($deadTime): $($test.name)は動作しています"
-                }
-              }
-              if (-Not $processStopped) {
-                Write-Output "$($test.name) のテストが成功しました"
-                $results += "$($test.name): Success"
-              }
-            }
-            $results | Out-File -FilePath $resultsFilePath -Append
-            Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-            $logResults | Out-File -FilePath $logResultsFilePath -Append
-            Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-          }
-
-          # YAMLファイルの読み込み
           $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
           if (-Not $yamlFileInput) {
             $yamlFileInput = 'weekdays'
@@ -187,38 +89,10 @@ jobs:
           Write-Output "Checking if Mekiki process is alive..."
           $processName = "Hutzper.Project.Mekiki"
           $startTime = Get-Date
-          $endTime = $startTime.AddMinutes(1)
+          $endTime = $startTime.AddMinutes(5)
 
-          while ((Get-Date) -lt $endTime) {
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+          $resultsFilePath = "${{ env.base_results_dir }}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
+          $logResultsFilePath = "${{ env.base_results_dir }}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
 
-            if ($process) {
-              Write-Output "$processName is running."
-              break
-            }
-            Start-Sleep -Seconds 5
-          }
-
-          if (-Not $process) {
-            Write-Output "$processName has stopped within the 1-minute check period."
-            exit 1
-          }
-
-          # 日付ごとのフォルダを作成
-          $dateSuffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
-          $dateFolder = "${{ env.base_results_dir }}/$dateSuffix"
-          if (-Not (Test-Path $dateFolder)) {
-            New-Item -Path $dateFolder -ItemType Directory | Out-Null
-          }
-
-          #testごとのフォルダを作成
-          $testsFolder = "${dateFolder}/$timestamp"
-          if (-Not (Test-Path $testsFolder)) {
-            New-Item -Path $testsFolder -ItemType Directory | Out-Null
-          }
-
-          $resultsFilePath = "${testsFolder}/test_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
-          $logResultsFilePath = "${testsFolder}/log_results_${{ steps.get_timestamp_and_suffix.outputs.timestamp }}.txt"
-
-          Test-Process -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$dateSuffix.log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}"
+          .\scripts\test_process.ps1 -processSettings $processSettings -logFilePath "${{ env.log_dir }}/$(Get-Date -Format yyyyMMdd).log" -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath -timestamp '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
         shell: powershell
