@@ -52,8 +52,8 @@ jobs:
       - name: Build or Publish Mekiki Project
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
-          if ([string]::IsNullOrEmpty($operation)) {
-            $operation = 'build'
+          if ($oparetion -eq "") {
+            $operation = "build"
           }
           ./scripts/build_or_publish.ps1 -operation "${{ github.event.inputs.build_or_publish }}" -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
         shell: powershell
