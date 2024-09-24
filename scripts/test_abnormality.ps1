@@ -52,8 +52,10 @@ foreach ($test in $processSettings.tests) {
       $logResults | Out-File -FilePath $logResultsFilePath -Append
       Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
       Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-      $processStopped = $true
-      break
+
+      # 異常をGitHub Actionsに通知し、ジョブを失敗させる
+      Write-Host "::error::$($test.name)テスト中に異常が発生しました"
+      exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
     } else {
       Write-Output "$($deadTime): $($test.name)は動作しています"
     }
@@ -63,6 +65,7 @@ foreach ($test in $processSettings.tests) {
     $results += "$($test.name): Success"
   }
 }
+
 $results | Out-File -FilePath $resultsFilePath -Append
 Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
 $logResults | Out-File -FilePath $logResultsFilePath -Append
