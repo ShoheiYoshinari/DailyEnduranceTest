@@ -46,7 +46,7 @@ jobs:
           if ($branch -eq "main") {
             $branch = "test_endurance"
           }
-          ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch "$branch"
+          ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch "test_endurance"
         shell: powershell
 
       - name: Build or Publish Mekiki Project
@@ -64,7 +64,6 @@ jobs:
         shell: powershell
 
       - name: Read YAML File and Start Mekiki Tests
-        id: start_tests
         run: |
           $result = ./scripts/start_mekiki_tests.ps1 `
             -yamlFileInput "${{ github.event.inputs.yaml_file }}" `
@@ -75,10 +74,11 @@ jobs:
             -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}" `
             -dateSuffix "${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}"
 
-          if ($result -eq 1) {
+          if ($result -eq 0) {
             echo "エラー: Mekiki テストの実行に失敗しました"
             exit 1
           } else {
             echo "Mekiki テストの実行に成功しました"
+            echo "::set-env name=TEST_RESULT::1"
           }
         shell: powershell

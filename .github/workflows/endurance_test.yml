@@ -23,6 +23,7 @@ env:
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   mekiki_project: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
+  setting_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64"
   log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
   base_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
@@ -105,61 +106,61 @@ jobs:
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $processSettings = $yamlContent | ConvertFrom-Yaml
 
-          Write-Output "Starting Mekiki application..."
-          if (-Not (Test-Path "${{ env.vs_path }}")) {
-            Write-Error "Visual Studio のパスが見つかりません。"
-            exit 1
-          }
-          Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
-          Start-Sleep -Seconds 5
-
-          Write-Output "Checking if Mekiki process is alive..."
-          $processName = "Hutzper.Project.Mekiki"
-          $startTime = Get-Date
-          $endTime = $startTime.AddMinutes(1)
-
-          while ((Get-Date) -lt $endTime) {
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-
-            if ($process) {
-              Write-Output "$processName is running."
-              break
-            }
-            Start-Sleep -Seconds 5
-          }
-
-          if (-Not $process) {
-            Write-Output "$processName has stopped within the 1-minute check period."
-            exit 1
-          }
-
           # 日付ごとのフォルダを作成
           $dateFolder = "${{ env.base_results_dir }}/$date_suffix"
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
-          # testごとのフォルダ作成
-          $testsFolder = "${dateFolder}/$timestamp"
-          if (-Not (Test-Path $testsFolder)) {
-            New-Item -Path $testsFolder -ItemType Directory | Out-Null
-          }
 
-          # 動作テスト
-          $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
-          $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
-          $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
-
+          # 動作テストのために各テストごとにプロセスを起動
           $results = @()
-          $logResults = @()
           foreach ($tests in $processSettings.tests) {
+            Write-Output "Starting Mekiki application for test: $($tests.name)..."
+
+            if (-Not (Test-Path "${{ env.vs_path }}")) {
+              Write-Error "Visual Studio のパスが見つかりません。"
+              exit 1
+            }
+            Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
+            Start-Sleep -Seconds 5
+
+            Write-Output "Checking if Mekiki process is alive..."
+            $processName = "Hutzper.Project.Mekiki"
+            $startTime = Get-Date
+            $endTime = $startTime.AddMinutes(1)
+
+            while ((Get-Date) -lt $endTime) {
+              $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
+
+              if ($process) {
+                Write-Output "$processName is running."
+                break
+              }
+              Start-Sleep -Seconds 5
+            }
+
+            if (-Not $process) {
+              Write-Output "$processName has stopped within the 1-minute check period."
+              exit 1
+            }
+
+            # testごとのフォルダ作成
+            $testsFolder = "${dateFolder}/$($tests.name)"
+            if (-Not (Test-Path $testsFolder)) {
+              New-Item -Path $testsFolder -ItemType Directory | Out-Null
+            }
+
+            # 動作テスト
+            $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
+            $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
+            $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
+
             Write-Output "プロセス: $($tests.name)"
             Write-Output "テスト時間: $($tests.duration_minutes) 分"
-            $startTime = Get-Date
-            $endTime = $startTime.AddMinutes($tests.duration_minutes)
-
-            Write-Output "プロセス $($tests.name) のテストを開始します"
             $processStopped = $false
-            while ((Get-Date) -lt $endTime) {
+            $testEndTime = (Get-Date).AddMinutes($tests.duration_minutes)
+
+            while ((Get-Date) -lt $testEndTime) {
               Start-Sleep -Seconds 5
 
               $logContent = Get-Content $logFilePath -Raw
@@ -188,6 +189,7 @@ jobs:
                 Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
             }
+
             if (-Not $processStopped) {
               Write-Output " $($tests.name) のテストが成功しました"
               $results += "$($tests.name): Success"
@@ -197,13 +199,8 @@ jobs:
               $results += "$($tests.name): Failure"
               $results | Out-File -FilePath $resultsFilePath -Append
               Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-              $logResults | Out-File -FilePath $logResultsFilePath -Append
-              Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-              exit 1
             }
           }
-          $results | Out-File -FilePath $resultsFilePath -Append
-          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-          $logResults | Out-File -FilePath $logResultsFilePath -Append
-          Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+          $results | Out-File -FilePath "$dateFolder/test_results_$timestamp.txt"
+          Write-Output "すべての結果が 'test_results_$($timestamp).txt' に保存されました"
         shell: powershell
