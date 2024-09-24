@@ -23,7 +23,7 @@ env:
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   mekiki_project: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   yaml_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
-  setting_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64"
+  mekiki_setting: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64"
   log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
   base_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
@@ -148,6 +148,17 @@ jobs:
             $testsFolder = "${dateFolder}/$($tests.name)"
             if (-Not (Test-Path $testsFolder)) {
               New-Item -Path $testsFolder -ItemType Directory | Out-Null
+            }
+
+            # 設定フォルダを特定のパスに上書きする
+            $sourceSettingDir = "${{ env.mekiki_setting }}"
+            $destinationSettingDir = "${{ env.yaml_settings_dir }}"
+            if (Test-Path $sourceSettingDir) {
+              Copy-Item -Path "$sourceSettingDir\*" -Destination $destinationSettingDir -Recurse -Force
+              Write-Output "設定フォルダ '$sourceSettingDir' の内容を '$destinationSettingDir' に上書きしました。"
+            } else {
+              Write-Error "設定フォルダ '$sourceSettingDir' が見つかりません。"
+              exit 1
             }
 
             # 動作テスト
