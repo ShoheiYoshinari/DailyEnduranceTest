@@ -133,3 +133,4 @@ Write-Output "結果が 'test_results_$($timestamp).txt' に保存されまし�
 $logResults | Out-File -FilePath $logResultsFilePath -Append
 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
 Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=1"
+exit 0
