@@ -65,7 +65,7 @@ jobs:
       - name: Dotnet Build or Publish 
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
-          if ([string]::IsNullOrEmpty($operation)) {
+          if ($operation -eq '') {
             $operation = 'build'
           }
 
