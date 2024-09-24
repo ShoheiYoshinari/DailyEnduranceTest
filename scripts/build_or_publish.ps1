@@ -10,4 +10,5 @@ if ($operation -eq 'build') {
   dotnet publish $projectPath -c Release -o $outputDir
 } else {
   throw "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
+  Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
 }

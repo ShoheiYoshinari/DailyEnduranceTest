@@ -47,20 +47,38 @@ jobs:
             $branch = "test_endurance"
           }
           ./scripts/prepare_repository.ps1 -repoUrl "${{ env.repository_url }}" -dir "${{ env.test_dir }}" -branch "test_endurance"
+
+          if ($LASTEXITCODE -ne 0) {
+            echo "エラー: リポジトリのチェックアウトに失敗しました"
+            exit 1
+          }
+          echo "::set-env name=TEST_RESULT::1"
         shell: powershell
 
       - name: Build or Publish Mekiki Project
         run: |
           $operation = '${{ github.event.inputs.build_or_publish }}'
-          if ($oparetion -eq "") {
+          if ($operation -eq "") {
             $operation = "build"
           }
-          ./scripts/build_or_publish.ps1 -operation "${{ github.event.inputs.build_or_publish }}" -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+          ./scripts/build_or_publish.ps1 -operation "$operation" -projectPath "${{ env.mekiki_project }}" -outputDir "${{ env.test_dir }}/publish"
+
+          if ($LASTEXITCODE -ne 0) {
+            echo "エラー: ビルドまたは公開に失敗しました"
+            exit 1
+          }
+          echo "::set-env name=TEST_RESULT::1"
         shell: powershell
 
       - name: Install PowerShell-Yaml Module
         run: |
           Install-Module -Name powershell-yaml -Scope CurrentUser -Force
+
+          if ($LASTEXITCODE -ne 0) {
+            echo "エラー: PowerShell-Yaml モジュールのインストールに失敗しました"
+            exit 1
+          }
+          echo "::set-env name=TEST_RESULT::1"
         shell: powershell
 
       - name: Read YAML File and Start Mekiki Tests
@@ -73,4 +91,10 @@ jobs:
             -baseResultsDir "${{ env.base_results_dir }}" `
             -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}" `
             -dateSuffix "${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}"
+            
+          if ($LASTEXITCODE -ne 0) {
+            echo "エラー: Mekiki テストの実行に失敗しました"
+            exit 1
+          }
+          echo "::set-env name=TEST_RESULT::1"
         shell: powershell

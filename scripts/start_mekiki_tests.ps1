@@ -19,6 +19,7 @@ function Read-YamlFile {
 $yamlFilePath = "$env:yaml_settings_dir/$yamlFileInput.yml"
 if (-Not (Test-Path $yamlFilePath)) {
     throw "YAMLファイル '$yamlFilePath' が存在しません。"
+    Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
     exit 1
 }
 
@@ -29,6 +30,7 @@ $processSettings = Read-YamlFile -yamlFilePath $yamlFilePath
 Write-Output "Starting Mekiki application..."
 if (-Not (Test-Path $vsPath)) {
     Write-Error "Visual Studio のパスが見つかりません。"
+    Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
     exit 1
 }
 
@@ -51,6 +53,7 @@ while ((Get-Date) -lt $endTime) {
 
 if (-Not $process) {
     Write-Output "$processName has stopped within the 1-minute check period."
+    Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
     exit 1
 }
 
@@ -113,9 +116,8 @@ foreach ($test in $processSettings.tests) {
             Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
             Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
 
-            # 異常をGitHub Actionsに通知し、ジョブを失敗させる
-            Write-Host "::error::$($test.name)テスト中に異常が発生しました"
-            exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
+            Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
+            exit 1
         } else {
             Write-Output "$($deadTime): $($test.name)は動作しています"
         }
@@ -126,9 +128,10 @@ foreach ($test in $processSettings.tests) {
         $results += "$($test.name): Success"
     }
 }
-
 # 結果をファイルに保存
 $results | Out-File -FilePath $resultsFilePath -Append
 Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
 $logResults | Out-File -FilePath $logResultsFilePath -Append
 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+
+Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=1"
