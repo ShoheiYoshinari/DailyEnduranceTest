@@ -74,7 +74,9 @@ jobs:
             -timestamp "${{ steps.get_timestamp_and_suffix.outputs.timestamp }}" `
             -dateSuffix "${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}"
 
-          if ($TEST_RESULT -eq 0) {
+          if ("$TEST_RESULT"-eq "1") {
+            echo "エラー: Mekiki テストの実行に成功しました"
+          } else {
             echo "エラー: Mekiki テストの実行に失敗しました"
             exit 1
           }
