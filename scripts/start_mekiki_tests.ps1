@@ -125,6 +125,7 @@ foreach ($test in $processSettings.tests) {
         $logResults | Out-File -FilePath $logResultsFilePath -Append
         Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
         Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
+        exit 1
     }
 }
 $results | Out-File -FilePath $resultsFilePath -Append
