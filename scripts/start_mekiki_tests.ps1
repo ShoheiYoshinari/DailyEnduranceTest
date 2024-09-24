@@ -88,11 +88,9 @@ foreach ($test in $processSettings.tests) {
     
     while ((Get-Date) -lt $endTime) {
         Start-Sleep -Seconds 5
-        
-        $logContent = Get-Content "$logDir/$(Get-Date -Format yyyyMMdd).log" -Raw
+        $logContent = Get-Content $logFilePath -Raw
         $logLines = $logContent -split "`n"
         $filteredLines = @()
-        
         foreach ($line in $logLines) {
             if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
                 $lineTimestamp = $matches[0]
@@ -103,35 +101,34 @@ foreach ($test in $processSettings.tests) {
                 }
             }
         }
-        
         $logResults = $filteredLines
-        
         $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         if ($filteredLines -match "異常") {
-            Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
+            Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
             $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
-            $results += "$($test.name): Failure"
-            $errorLines | Out-File -FilePath $resultsFilePath -Append
-            $logResults | Out-File -FilePath $logResultsFilePath -Append
-            Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-            Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-
-            Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
-            exit 1
+            $results += $errorLines
+            $processStopped = $true
+            break
         } else {
-            Write-Output "$($deadTime): $($test.name)は動作しています"
+            Write-Output "$($deadTime): $($tests.name)は動作しています"
         }
     }
-
     if (-Not $processStopped) {
-        Write-Output "$($test.name) のテストが成功しました"
-        $results += "$($test.name): Success"
+        Write-Output " $($tests.name) のテストが成功しました"
+        $results += "$($tests.name): Success"
+    } else {
+        Write-Output "$($tests.name) のテストが失敗しました"
+        Write-Output $logResults
+        $results += "$($tests.name): Failure"
+        $results | Out-File -FilePath $resultsFilePath -Append
+        Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+        $logResults | Out-File -FilePath $logResultsFilePath -Append
+        Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+        Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=0"
     }
 }
-# 結果をファイルに保存
 $results | Out-File -FilePath $resultsFilePath -Append
 Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
 $logResults | Out-File -FilePath $logResultsFilePath -Append
 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-
 Add-Content -Path $env:GITHUB_ENV -Value "TEST_RESULT=1"
