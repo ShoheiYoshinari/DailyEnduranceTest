@@ -75,9 +75,10 @@ jobs:
             -dateSuffix "${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}"
 
           if ($LASTEXITCODE -ne 0) {
-            echo "エラー: Mekiki テストの実行に成功しました"
-          } else {
             echo "エラー: Mekiki テストの実行に失敗しました"
             exit 1
+          } else {
+            echo "Mekiki テストの実行に成功しました"
+            echo "::set-env name=TEST_RESULT::1"
           }
         shell: powershell
