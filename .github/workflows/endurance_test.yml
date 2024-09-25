@@ -106,17 +106,18 @@ jobs:
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $processSettings = $yamlContent | ConvertFrom-Yaml
 
-          # 日付ごとのフォルダを作成
+           # 日付ごとのフォルダを作成
           $dateFolder = "${{ env.test_results_dir }}/$date_suffix"
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
-          
-          #テストごとのフォルダの作成
+
+          # テストごとのフォルダの作成
           $testsFolder = "$dateFolder/$timestamp"
-           if (-Not (Test-Path $dateFolder)) {
+          if (-Not (Test-Path $testsFolder)) {
             New-Item -Path $testsFolder -ItemType Directory | Out-Null
           }
+
 
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
