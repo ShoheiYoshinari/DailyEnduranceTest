@@ -198,7 +198,7 @@ jobs:
 
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($filteredLines -match "異常") {
-                Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
+                Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += "$($test.name): Failure"
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
@@ -207,15 +207,15 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
 
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
-                Write-Host "::error::$($test.name)テスト中に異常が発生しました"
+                Write-Host "::error::$($tests.name)テスト中に異常が発生しました"
                 exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
               } else {
-                Write-Output "$($deadTime): $($test.name)は動作しています"
+                Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
             }
             if (-Not $processStopped) {
-              Write-Output "$($test.name) のテストが成功しました"
-              $results += "$($test.name): Success"
+              Write-Output "$($tests.name) のテストが成功しました"
+              $results += "$($tests.name): Success"
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
