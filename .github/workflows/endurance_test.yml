@@ -119,6 +119,9 @@ jobs:
             $testsFolder = "${dateFolder}/$($tests.name)"
             if (-Not (Test-Path $testsFolder)) {
               New-Item -Path $testsFolder -ItemType Directory | Out-Null
+              Write-Output "Directory created: $testsFolder"
+            } else {
+              Write-Output "Directory '$testsFolder' already exists."
             }
 
             # 設定フォルダを特定のパスに上書きする
