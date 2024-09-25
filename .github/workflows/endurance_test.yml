@@ -130,7 +130,6 @@ jobs:
             }
 
             # ZIPファイルを展開してx64に上書き
-            Remove-Item "${{ env.mekiki_setting }}\x64" -Recurse -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
