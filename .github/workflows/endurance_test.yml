@@ -23,7 +23,7 @@ env:
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   mekiki_project: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
   test_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
-  mekiki_setting: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64"
+  mekiki_setting: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin"
   log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
   test_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
@@ -130,7 +130,7 @@ jobs:
             }
 
             # ZIPファイルを展開してx64に上書き
-            Remove-Item "${{ env.mekiki_setting }}" -Recurse -Force
+            Remove-Item "${{ env.mekiki_setting }}\x64" -Recurse -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
