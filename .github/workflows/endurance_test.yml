@@ -216,6 +216,8 @@ jobs:
               Write-Output "$($test.name) のテストが成功しました"
               $results += "$($test.name): Success"
             }
+            Write-Output "Visual Studioを終了しています..."
+            Stop-Process -Name devenv -Force
           }
 
           $results | Out-File -FilePath $resultsFilePath -Append
