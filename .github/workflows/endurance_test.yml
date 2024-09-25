@@ -136,12 +136,11 @@ jobs:
 
             # ZIPファイルを展開してx64に上書き
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
-            Expand-Archive -Path $zipFilePath -DestinationPath ${{ env.mekiki_setting }} -Force
+            Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
-
             if (-Not (Test-Path "${{ env.vs_path }}")) {
               Write-Error "Visual Studio のパスが見つかりません。"
               exit 1
