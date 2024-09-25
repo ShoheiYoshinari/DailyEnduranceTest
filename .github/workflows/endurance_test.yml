@@ -168,9 +168,8 @@ jobs:
             $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
 
             $startTime = Get-Date
-            $endTime = $startTime.AddMinutes($test.duration_minutes)
-
-            Write-Output "プロセス $($test.name) のテストを開始します"
+            $endTime = $startTime.AddMinutes($tests.duration_minutes)
+            Write-Output "プロセス $($tests.name) のテストを開始します"
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
