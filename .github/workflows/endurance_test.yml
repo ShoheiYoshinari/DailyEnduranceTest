@@ -5,7 +5,7 @@ on:
     - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
   workflow_dispatch:
     inputs:
-      yaml_file:
+      zip_file:
         description: '読み込むYAMLファイルの名前 (拡張子なし)'
         required: false
         default: 'weekdays'
@@ -22,10 +22,10 @@ env:
   test_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library"
   repository_url: "https://github.com/Hutzper-inc/CSharp.Hutzper.Library.git"
   mekiki_project: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/Hutzper.Project.Mekiki.csproj"
-  yaml_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
+  test_settings_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/settings"
   mekiki_setting: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64"
   log_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/Hutzper.Library.FormsMekiki/bin/x64/log"
-  base_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
+  test_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
 
 jobs:
@@ -91,12 +91,12 @@ jobs:
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
 
           # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
-          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
+          $yamlFileInput = '${{ github.event.inputs.zip_file }}'
           if($yamlFileInput -eq '') {
             $yamlFileInput = 'weekdays'
           }
           $yamlFileName = "$yamlFileInput.yml"
-          $yamlFilePath = "${{ env.yaml_settings_dir }}\$yamlFileName"
+          $yamlFilePath = "${{ env.test_settings_dir }}\$yamlFileName"
           
           if (-Not (Test-Path $yamlFilePath)) {
             Write-Error "YAMLファイル '$yamlFilePath' が存在しません。"
@@ -107,7 +107,7 @@ jobs:
           $processSettings = $yamlContent | ConvertFrom-Yaml
 
           # 日付ごとのフォルダを作成
-          $dateFolder = "${{ env.base_results_dir }}/$date_suffix"
+          $dateFolder = "${{ env.test_results_dir }}/$date_suffix"
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
@@ -115,6 +115,31 @@ jobs:
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
           foreach ($tests in $processSettings.tests) {
+            # testごとのフォルダ作成
+            $testsFolder = "${dateFolder}/$($tests.name)"
+            if (-Not (Test-Path $testsFolder)) {
+              New-Item -Path $testsFolder -ItemType Directory | Out-Null
+            }
+
+            # 設定フォルダを特定のパスに上書きする
+            $zipFileInput = '${{ github.event.inputs.zip_file }}'
+            if($zipFileInput -eq '') {
+              $zipFileInput = 'weekdays'
+            }
+            $zipFileName = "$zipFileInput.zip"
+            $zipFilePath = "${{ env.test_settings_dir }}\$zipFileName"
+
+            if (-Not (Test-Path $zipFilePath)) {
+              Write-Error "ZIPファイル '$zipFilePath' が存在しません。"
+              exit 1
+            }
+
+            # ZIPファイルを展開してx64に上書き
+            Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
+            Expand-Archive -Path $zipFilePath -DestinationPath ${{ env.mekiki_setting }} -Force
+            Remove-Item "${{ env.mekiki_setting }}\$zipFileName" -Force
+            Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
+
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
 
             if (-Not (Test-Path "${{ env.vs_path }}")) {
@@ -141,23 +166,6 @@ jobs:
 
             if (-Not $process) {
               Write-Output "$processName has stopped within the 1-minute check period."
-              exit 1
-            }
-
-            # testごとのフォルダ作成
-            $testsFolder = "${dateFolder}/$($tests.name)"
-            if (-Not (Test-Path $testsFolder)) {
-              New-Item -Path $testsFolder -ItemType Directory | Out-Null
-            }
-
-            # 設定フォルダを特定のパスに上書きする
-            $sourceSettingDir = "${{ env.mekiki_setting }}"
-            $destinationSettingDir = "${{ env.yaml_settings_dir }}"
-            if (Test-Path $sourceSettingDir) {
-              Copy-Item -Path "$sourceSettingDir\*" -Destination $destinationSettingDir -Recurse -Force
-              Write-Output "設定フォルダ '$sourceSettingDir' の内容を '$destinationSettingDir' に上書きしました。"
-            } else {
-              Write-Error "設定フォルダ '$sourceSettingDir' が見つかりません。"
               exit 1
             }
 
