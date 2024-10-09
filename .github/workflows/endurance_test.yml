@@ -118,7 +118,6 @@ jobs:
             New-Item -Path $testsFolder -ItemType Directory | Out-Null
           }
 
-
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
           $logResults = @()
@@ -138,7 +137,9 @@ jobs:
 
             # ZIPファイルを展開してx64に上書き
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
+            Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Recurse -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
+            Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
