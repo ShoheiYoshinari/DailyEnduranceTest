@@ -127,6 +127,8 @@ jobs:
               exit 1
             }
             # ZIPファイルを展開してx64に上書き
+            $x64Path = "${{ env.mekiki_setting }}/x64"
+            Remove-Item -Path $x64Path -Recurse -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
