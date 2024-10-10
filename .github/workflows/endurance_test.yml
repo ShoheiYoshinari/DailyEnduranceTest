@@ -1,5 +1,6 @@
 name: Endurance Test
 
+run-name: "Endurance test : ${{ github.event.inputs.zip_file }}"
 on:
   schedule:
     - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
