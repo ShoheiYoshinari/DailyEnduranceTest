@@ -135,14 +135,12 @@ jobs:
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
             #展開したzipファイルのディレクトリにlogフォルダの作成
-            $logFolder = "${{ env.mekiki_setting }}/x64/log"
+            $logFolder = Join-Path -Path "${{ env.mekiki_setting }}/x64" -ChildPath "log"
             if (-Not (Test-Path $logFolder)) {
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
-            # logファイルの作成
-            $logFilePath = "$logFolder/$date_suffix.log"
-            $logMessage = ""
-            $logMessage | Out-File -FilePath "$logFilePath" -Append
+            # 空のlogファイルの作成
+            $logFilePath = Join-Path -Path $logFolder -ChildPath "$date_suffix.log"
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
