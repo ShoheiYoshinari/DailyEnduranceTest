@@ -132,7 +132,7 @@ jobs:
             Write-Output "mekiki_setting: ${{ env.mekiki_setting }}"
             if (Test-Path $x64Path) {
               Write-Output "指定されたパス '$x64Path' は存在します。"
-              Remove-Item -Path $x64Path -Force
+              Remove-Item -Path "$x64Path" -Force -ErrorAction Stop
             } else {
               Write-Output "指定されたパス '$x64Path' は存在しません。"
               exit 1
