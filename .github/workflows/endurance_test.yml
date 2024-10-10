@@ -96,7 +96,7 @@ jobs:
             $settingFileInput = 'weekdays'
           }
           $yamlFileName = "$settingFileInput.yml"
-          $yamlFilePath = "${{ env.test_settings_dir }}\$settingFileInput\$yamlFileName"
+          $yamlFilePath = "${{ env.test_settings_dir }}\$settingFileName"
           
           if (-Not (Test-Path $yamlFilePath)) {
             Write-Error "設定ファイル '$yamlFilePath' が存在しません。"
@@ -129,7 +129,7 @@ jobs:
             }
 
             # 必要なファイルの配置
-            Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Force
+            Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Force -Recurse
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
