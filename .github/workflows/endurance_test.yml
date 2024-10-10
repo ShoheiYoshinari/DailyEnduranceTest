@@ -2,7 +2,7 @@ name: Endurance Test
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
+    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始
   workflow_dispatch:
     inputs:
       zip_file:
@@ -118,11 +118,8 @@ jobs:
             New-Item -Path $testsFolder -ItemType Directory | Out-Null
           }
 
-          # 動作テストのために各テストごとにプロセスを起動
-          $results = @()
-          $logResults = @()
-          foreach ($test in $processSettings.tests) {
-            # 設定フォルダを特定のパスに上書きする
+          # 各テストの処理
+          foreach ($test in $processSettings.cameras) {
             $zipFileName = "$($test.name).zip"
             $zipFilePath = "${{ env.test_settings_dir }}\$zipFileName"
 
@@ -131,41 +128,28 @@ jobs:
               exit 1
             }
 
-            # x64ファイル削除 zipファイル上書き
+            # 必要なファイルの配置
             Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
-            Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
-            #展開したlogフォルダの作成
-            $logFolder = "${{ env.mekiki_setting }}/log"
-            if (-Not (Test-Path $dateFolder)) {
-              New-Item -Path $logFolder -ItemType Directory | Out-Null
-            }
-
-            # テストごとのフォルダの作成
-            $logFile = "$logFolder/$timestamp.log"
-            if (-Not (Test-Path $testsFolder)) {
-              New-Item -Path $testsFolder -ItemType Directory | Out-Null
-            }
-            
             Write-Output "Starting Mekiki application for test: $($test.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
               Write-Error "Visual Studio のパスが見つかりません。"
               exit 1
             }
+
+            # Mekikiプロジェクトの実行
             Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
             Start-Sleep -Seconds 5
 
-            Write-Output "Checking if Mekiki process is alive..."
+            # プロセス確認
             $processName = "Hutzper.Project.Mekiki"
-            $startTime = Get-Date
-            $endTime = $startTime.AddMinutes(1)
+            $endTime = (Get-Date).AddMinutes(1)
 
             while ((Get-Date) -lt $endTime) {
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-
               if ($process) {
                 Write-Output "$processName is running."
                 break
@@ -178,66 +162,26 @@ jobs:
               exit 1
             }
 
-            # 動作テスト
+            # テスト処理とログ確認
             $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
-            $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
-            $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
-
             $startTime = Get-Date
             $endTime = $startTime.AddMinutes($test.duration_minutes)
-            Write-Output "プロセス $($tests.name) のテストを開始します"
-            $processStopped = $false
+
             while ((Get-Date) -lt $endTime) {
               Start-Sleep -Seconds 5
 
               $logContent = Get-Content $logFilePath -Raw
-              $logLines = $logContent -split "`n"
-              $filteredLines = @()
-              foreach ($line in $logLines) {
-                if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
-                  $lineTimestamp = $matches[0]
-                  $lineTime = [datetime]::ParseExact($lineTimestamp, "HH:mm:ss.fff", $null)
-
-                 if ($lineTime -gt [datetime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)) {
-                    $filteredLines += $line
-                  }
-                }
-              }
-              $logResults = $filteredLines
-
-              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              if ($filteredLines -match "異常") {
-                Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
-                $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
-                $results += "$($test.name): Failure"
-                $errorLines | Out-File -FilePath $resultsFilePath -Append
-                $logResults | Out-File -FilePath $logResultsFilePath -Append
-                Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-                Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
-
-                # 異常をGitHub Actionsに通知し、ジョブを失敗させる
+              if ($logContent -match "異常") {
                 Write-Host "::error::$($test.name)テスト中に異常が発生しました"
-                exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
+                exit 1
               } else {
-                Write-Output "$($deadTime): $($test.name)は動作しています"
+                Write-Output "$($test.name)は正常に動作しています."
               }
             }
-            if (-Not $processStopped) {
-              Write-Output "$($test.name) のテストが成功しました"
-              $results += "$($test.name): Success"
-            }
-            Write-Output "Visual Studioを終了しています..."
-            Stop-Process -Name devenv -Force
 
-            # Check if Visual Studio process still exists
-            while (Get-Process -Name devenv -ErrorAction SilentlyContinue) {
-              Write-Output "Visual Studioがまだ終了していません。停止を待機しています..."
-              Start-Sleep -Seconds 2  # Wait for 2 seconds before checking again
-            }
+            # Visual Studioの停止
+            Stop-Process -Name devenv -Force
           }
 
-          $results | Out-File -FilePath $resultsFilePath -Append
-          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
-          $logResults | Out-File -FilePath $logResultsFilePath -Append
-          Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+          Write-Output "すべてのテストが完了しました。"
         shell: powershell
