@@ -140,9 +140,9 @@ jobs:
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
             # logファイルの作成
-            $logFilePath = "$logFolder/$($date_suffix).log"
+            $logFilePath = "$logFolder/$date_suffix.log"
             $logMessage = ""
-            $logMessage | Out-File -FilePath "$logFilePath" -Append
+            $logMessage | Out-File -FilePath "$logFile" -Append
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
@@ -168,6 +168,7 @@ jobs:
               exit 1
             }
             # 動作テスト
+            $logFilePath = "${{ env.log_dir }}/$date_suffix.log"
             $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
             $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
             $startTime = Get-Date
