@@ -89,7 +89,7 @@ jobs:
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
           # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
           $yamlFileInput = '${{ github.event.inputs.zip_file }}'
-          if ($yamlFileInput -eq '') {
+          if($yamlFileInput -eq '') {
             $yamlFileInput = 'weekdays'
           }
           $yamlFileName = "$yamlFileInput.yml"
@@ -107,20 +107,18 @@ jobs:
           if (-Not (Test-Path $dateFolder)) {
             New-Item -Path $dateFolder -ItemType Directory | Out-Null
           }
-
           # テストごとのフォルダの作成
           $testsFolder = "$dateFolder/$timestamp"
           if (-Not (Test-Path $testsFolder)) {
             New-Item -Path $testsFolder -ItemType Directory | Out-Null
           }
-
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
           $logResults = @()
           foreach ($tests in $processSettings.tests) {
             # 設定フォルダを特定のパスに上書きする
             $zipFileInput = '${{ github.event.inputs.zip_file }}'
-            if ($zipFileInput -eq '') {
+            if($zipFileInput -eq '') {
               $zipFileInput = 'weekdays'
             }
             $zipFileName = "$zipFileInput.zip"
@@ -129,7 +127,6 @@ jobs:
               Write-Error "ZIPファイル '$zipFilePath' が存在しません。"
               exit 1
             }
-
             # ZIPファイルを展開してx64に上書き
             Remove-Item -Path "${{ env.mekiki_setting }}/x64" -Recurse -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
@@ -137,12 +134,11 @@ jobs:
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
-            # 展開したzipファイルのディレクトリにlogフォルダの作成
+            #展開したzipファイルのディレクトリにlogフォルダの作成
             $logFolder = Join-Path -Path "${{ env.mekiki_setting }}/x64" -ChildPath "log"
             if (-Not (Test-Path $logFolder)) {
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
-
             # 空のlogファイルの作成
             $logFilePath = Join-Path -Path $logFolder -ChildPath "$date_suffix.log"
             
@@ -169,7 +165,6 @@ jobs:
               Write-Output "$processName has stopped within the 1-minute check period."
               exit 1
             }
-
             # 動作テスト
             $resultsFilePath = "${testsFolder}/test_results_$timestamp.txt"
             $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
@@ -183,38 +178,41 @@ jobs:
               $logLines = $logContent -split "`n"
               $filteredLines = @()
               foreach ($line in $logLines) {
-                if ($line -match '異常') {
-                  $filteredLines += $line
-                  $processStopped = $true
+                if ($line -match "^\d{2}:\d{2}:\d{2}\.\d{3}") {
+                  $lineTimestamp = $matches[0]
+                  $lineTime = [datetime]::ParseExact($lineTimestamp, "HH:mm:ss.fff", $null)
+                 if ($lineTime -gt [datetime]::ParseExact($timestamp, "yyyyMMdd-HHmmss", $null)) {
+                    $filteredLines += $line
+                  }
                 }
               }
-              if ($processStopped) {
-                Write-Output "エラーがログに記録されました。"
-                break
+              $logResults = $filteredLines
+              $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              if ($filteredLines -match "異常") {
+                Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
+                $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
+                $results += "$($test.name): Failure"
+                $errorLines | Out-File -FilePath $resultsFilePath -Append
+                $logResults | Out-File -FilePath $logResultsFilePath -Append
+                Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+                Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+                # 異常をGitHub Actionsに通知し、ジョブを失敗させる
+                Write-Host "::error::$($tests.name)テスト中に異常が発生しました"
+                exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
+              } else {
+                Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
             }
-            if ($processStopped) {
-              $errorLog = "テスト中に異常が検出されました: $($tests.name)"
-              $results += $errorLog
-              Write-Output $errorLog | Out-File -FilePath $resultsFilePath -Append
-              Write-Output "テストの結果: 異常"
-              Write-Output "テストのログ: $filteredLines" | Out-File -FilePath $logResultsFilePath -Append
-            } else {
-              Write-Output "テストの結果: 正常"
-              Write-Output "テストが正常に完了しました。" | Out-File -FilePath $resultsFilePath -Append
-              Write-Output "テストのログ: なし" | Out-File -FilePath $logResultsFilePath -Append
+            if (-Not $processStopped) {
+              Write-Output "$($tests.name) のテストが成功しました"
+              $results += "$($tests.name): Success"
             }
-
-            # プロセスを強制終了
-            $process | ForEach-Object { $_.Kill() }
-            Start-Sleep -Seconds 5
+            Write-Output "Visual Studioを終了しています..."
+            Stop-Process -Name devenv -Force
+            Start-Sleep -Seconds 10
           }
-
-          # 結果を出力
-          if ($results.Count -gt 0) {
-            Write-Output "テスト結果: $results"
-          } else {
-            Write-Output "すべてのテストが正常に完了しました。"
-          }
-
+          $results | Out-File -FilePath $resultsFilePath -Append
+          Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
+          $logResults | Out-File -FilePath $logResultsFilePath -Append
+          Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
         shell: powershell
