@@ -128,15 +128,19 @@ jobs:
             }
             # ZIPファイルを展開してx64に上書き
             $x64Path = "${{ env.mekiki_setting }}/x64"
-            Write-Output "x64Path: $x64Path"
-            Write-Output "mekiki_setting: ${{ env.mekiki_setting }}"
             if (Test-Path $x64Path) {
-              Write-Output "指定されたパス '$x64Path' は存在します。"
-              Remove-Item -Path "$x64Path" -Force -ErrorAction Stop
+              Write-Host "パスは存在します: $x64Path"
+              try {
+                Remove-Item -Path "$x64Path" -Force -ErrorAction Stop
+                Write-Host "ディレクトリが削除されました。"
+              } catch {
+                  Write-Host "エラーが発生しました: $($_.Exception.Message)"
+                  Write-Host "スタックトレース: $($_.ScriptStackTrace)"
+              }
             } else {
-              Write-Output "指定されたパス '$x64Path' は存在しません。"
-              exit 1
+                Write-Host "パスは存在しません: $x64Path"
             }
+
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
