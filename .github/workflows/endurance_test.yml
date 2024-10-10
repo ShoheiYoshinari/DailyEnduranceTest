@@ -98,7 +98,7 @@ jobs:
           $yamlFileName = "$settingFileInput.yml"
           $yamlFilePath = "${{ env.test_settings_dir }}\$settingFileInput\$yamlFileName"
           
-          if (-Not (Test-Path $settingFilePath)) {
+          if (-Not (Test-Path $yamlFilePath)) {
             Write-Error "設定ファイル '$yamlFilePath' が存在しません。"
             exit 1
           }
