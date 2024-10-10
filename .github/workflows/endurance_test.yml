@@ -213,6 +213,7 @@ jobs:
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
+            Start-Sleep -Seconds 10
           }
           $results | Out-File -FilePath $resultsFilePath -Append
           Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
