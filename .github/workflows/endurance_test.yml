@@ -91,15 +91,15 @@ jobs:
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
 
           # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
-          $yamlFileInput = '${{ github.event.inputs.zip_file }}'
-          if($yamlFileInput -eq '') {
-            $yamlFileInput = 'weekdays'
+          $settingFileInput = '${{ github.event.inputs.zip_file }}'
+          if($settingFileInput -eq '') {
+            $settingFileInput = 'weekdays'
           }
-          $yamlFileName = "$yamlFileInput.yml"
-          $yamlFilePath = "${{ env.test_settings_dir }}\$yamlFileName"
+          $yamlFileName = "$settingFileInput.yml"
+          $yamlFilePath = "${{ env.test_settings_dir }}\$settingFileInput\$yamlFileName"
           
-          if (-Not (Test-Path $yamlFilePath)) {
-            Write-Error "YAMLファイル '$yamlFilePath' が存在しません。"
+          if (-Not (Test-Path $settingFilePath)) {
+            Write-Error "設定ファイル '$yamlFilePath' が存在しません。"
             exit 1
           }
 
@@ -121,7 +121,7 @@ jobs:
           # 各テストの処理
           foreach ($test in $processSettings.cameras) {
             $zipFileName = "$($test.name).zip"
-            $zipFilePath = "${{ env.test_settings_dir }}\$zipFileName"
+            $zipFilePath = "${{ env.test_settings_dir }}\$settingFileInput\$zipFileName"
 
             if (-Not (Test-Path $zipFilePath)) {
               Write-Error "ZIPファイル '$zipFilePath' が存在しません。"
