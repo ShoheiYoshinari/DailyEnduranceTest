@@ -1,13 +1,13 @@
 name: Endurance Test
 
-run-name: "Endurance test : ${{ github.event.inputs.zip_file }}"
+run-name: "Endurance test : ${{ github.event.inputs.yaml_file }}"
 on:
   schedule:
     - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
   workflow_dispatch:
     inputs:
-      zip_file:
-        description: '読み込むYAMLファイルの名前 (拡張子なし)'
+      yaml_file:
+        description: '読み込むyamlファイルの名前 (拡張子なし)'
         required: false
         default: 'weekdays'
       build_or_publish:
@@ -88,7 +88,7 @@ jobs:
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
           $date_suffix = '${{ steps.get_timestamp_and_suffix.outputs.date_suffix }}'
           # 入力ファイルが指定されていなければデフォルト 'weekdays.yml' を使用
-          $yamlFileInput = '${{ github.event.inputs.zip_file }}'
+          $yamlFileInput = '${{ github.event.inputs.yaml_file }}'
           if($yamlFileInput -eq '') {
             $yamlFileInput = 'weekdays'
           }
