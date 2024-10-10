@@ -127,8 +127,9 @@ jobs:
               exit 1
             }
             # ZIPファイルを展開してx64に上書き
-            # ZIPファイルを展開してx64に上書き
             $x64Path = "${{ env.mekiki_setting }}\x64"
+            Write-Output "x64Path: $x64Path"
+            Write-Output "mekiki_setting: ${{ env.mekiki_setting }}"
             if (Test-Path $x64Path) {
               Remove-Item -Path $x64Path -Force
             } else {
