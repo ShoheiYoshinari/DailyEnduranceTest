@@ -194,7 +194,7 @@ jobs:
               if ($filteredLines -match "異常") {
                 Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
-                $results += "$($test.name): Failure"
+                $results += "$($tests.name): Failure"
                 $logHistory += "$($logResults)"
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
                 $logHistory | Out-File -FilePath $logResultsFilePath -Append
