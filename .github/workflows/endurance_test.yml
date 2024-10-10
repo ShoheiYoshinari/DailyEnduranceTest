@@ -134,15 +134,15 @@ jobs:
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
-            #展開したlogフォルダの作成
+            #展開したzipファイルのディレクトリにlogフォルダの作成
             $logFolder = "${{ env.mekiki_setting }}/x64"
-            if (-Not (Test-Path $dateFolder)) {
+            if (-Not (Test-Path $logFolder)) {
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
-            # テストごとのフォルダの作成
+            # logファイルの作成
             $logFile = "$logFolder/$timestamp.log"
-            if (-Not (Test-Path $testsFolder)) {
-              New-Item -Path $testsFolder -ItemType Directory | Out-Null
+            if (-Not (Test-Path $logFile)) {
+              New-Item -Path $logFile -ItemType Directory | Out-Null
             }
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
