@@ -141,6 +141,9 @@ jobs:
             }
             # 空のlogファイルの作成
             $logFilePath = Join-Path -Path $logFolder -ChildPath "$date_suffix.log"
+            if (-Not (Test-Path $logFilePath)) {
+              New-Item -Path $logFilePath -ItemType File -Force | Out-Null
+            }
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
