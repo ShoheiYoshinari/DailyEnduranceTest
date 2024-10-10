@@ -142,7 +142,7 @@ jobs:
             # logファイルの作成
             $logFilePath = "$logFolder/$($date_suffix).log"
             $logMessage = ""
-            $logMessage | Out-File -FilePath "$logFile" -Append
+            $logMessage | Out-File -FilePath "$logFilePath" -Append
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
