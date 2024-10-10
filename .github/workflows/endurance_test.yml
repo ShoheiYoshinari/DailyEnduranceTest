@@ -198,6 +198,7 @@ jobs:
                 $logHistory += "$($logResults)"
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
                 $logHistory | Out-File -FilePath $logResultsFilePath -Append
+                Get_Content  -Path $logFilePath | Write-Host
                 Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
@@ -219,4 +220,5 @@ jobs:
           Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
           $logHistory | Out-File -FilePath $logResultsFilePath -Append
           Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
+          Write-Output "すべてのテストが終了しました"
         shell: powershell
