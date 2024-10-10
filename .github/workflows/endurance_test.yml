@@ -141,9 +141,8 @@ jobs:
             }
             # logファイルの作成
             $logFile = "$logFolder/$date_suffix.log"
-            if (-Not (Test-Path $logFile)) {
-              New-Item -Path $logFile -ItemType Directory | Out-Null
-            }
+            $logMessage = ""
+            $logMessage | Out-File -FilePath "$logFile" -Append
             
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
