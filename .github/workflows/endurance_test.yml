@@ -121,13 +121,9 @@ jobs:
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
           $logResults = @()
-          foreach ($tests in $processSettings.tests) {
+          foreach ($test in $processSettings.tests) {
             # 設定フォルダを特定のパスに上書きする
-            $zipFileInput = '${{ github.event.inputs.zip_file }}'
-            if($zipFileInput -eq '') {
-              $zipFileInput = 'weekdays'
-            }
-            $zipFileName = "$zipFileInput.zip"
+            $zipFileName = "$($test.name).zip"
             $zipFilePath = "${{ env.test_settings_dir }}\$zipFileName"
 
             if (-Not (Test-Path $zipFilePath)) {
@@ -135,7 +131,8 @@ jobs:
               exit 1
             }
 
-            # ZIPファイルを展開してx64に上書き
+            # x64ファイル削除 zipファイル上書き
+            Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
@@ -153,7 +150,7 @@ jobs:
               New-Item -Path $testsFolder -ItemType Directory | Out-Null
             }
             
-            Write-Output "Starting Mekiki application for test: $($tests.name)..."
+            Write-Output "Starting Mekiki application for test: $($test.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
               Write-Error "Visual Studio のパスが見つかりません。"
               exit 1
@@ -187,7 +184,7 @@ jobs:
             $logResultsFilePath = "${testsFolder}/log_results_$timestamp.txt"
 
             $startTime = Get-Date
-            $endTime = $startTime.AddMinutes($tests.duration_minutes)
+            $endTime = $startTime.AddMinutes($test.duration_minutes)
             Write-Output "プロセス $($tests.name) のテストを開始します"
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
@@ -210,7 +207,7 @@ jobs:
 
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               if ($filteredLines -match "異常") {
-                Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
+                Write-Output "$($deadTime): $($test.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += "$($test.name): Failure"
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
@@ -219,18 +216,24 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
 
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
-                Write-Host "::error::$($tests.name)テスト中に異常が発生しました"
+                Write-Host "::error::$($test.name)テスト中に異常が発生しました"
                 exit 1  # 非ゼロ終了コードを返してGitHub Actionsにエラー通知
               } else {
-                Write-Output "$($deadTime): $($tests.name)は動作しています"
+                Write-Output "$($deadTime): $($test.name)は動作しています"
               }
             }
             if (-Not $processStopped) {
-              Write-Output "$($tests.name) のテストが成功しました"
-              $results += "$($tests.name): Success"
+              Write-Output "$($test.name) のテストが成功しました"
+              $results += "$($test.name): Success"
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
+
+            # Check if Visual Studio process still exists
+            while (Get-Process -Name devenv -ErrorAction SilentlyContinue) {
+              Write-Output "Visual Studioがまだ終了していません。停止を待機しています..."
+              Start-Sleep -Seconds 2  # Wait for 2 seconds before checking again
+            }
           }
 
           $results | Out-File -FilePath $resultsFilePath -Append
