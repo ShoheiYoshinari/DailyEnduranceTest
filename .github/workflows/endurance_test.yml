@@ -127,12 +127,14 @@ jobs:
               exit 1
             }
             # ZIPファイルを展開してx64に上書き
+            Remove-Item -Path "${{ env.mekiki_setting }}\x64" -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
+
             #展開したlogフォルダの作成
-            $logFolder = "${{ env.mekiki_setting }}/log"
+            $logFolder = "${{ env.mekiki_setting }}\x64"
             if (-Not (Test-Path $dateFolder)) {
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
