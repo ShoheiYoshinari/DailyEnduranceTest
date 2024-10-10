@@ -101,6 +101,7 @@ jobs:
           }
           $yamlContent = Get-Content $yamlFilePath | Out-String
           $processSettings = $yamlContent | ConvertFrom-Yaml
+
           # 日付ごとのフォルダを作成
           $dateFolder = "${{ env.test_results_dir }}/$date_suffix"
           if (-Not (Test-Path $dateFolder)) {
@@ -109,7 +110,7 @@ jobs:
           # テストごとのフォルダの作成
           $testsFolder = "$dateFolder/$timestamp"
           if (-Not (Test-Path $testsFolder)) {
-            New-Item -Path $testsFolder -ItemType Directory | Out-Null
+            New-Item -Path $testsFolder -ItemType Directory | Out-Null54
           }
           # 動作テストのために各テストごとにプロセスを起動
           $results = @()
@@ -127,20 +128,19 @@ jobs:
               exit 1
             }
             # ZIPファイルを展開してx64に上書き
-            $x64Path = "${{ env.mekiki_setting }}/x64"
-            Remove-Item -Path $x64Path -Recurse -Force
+            Remove-Item -Path "${{ env.mekiki_setting }}/x64" -Recurse -Force
             Copy-Item -Path $zipFilePath -Destination ${{ env.mekiki_setting }} -Force
             Expand-Archive -Path "${{ env.mekiki_setting }}\$zipFileName" -DestinationPath ${{ env.mekiki_setting }} -Force
             Remove-Item -Path "${{ env.mekiki_setting }}\$zipFileName" -Force
             Write-Output "ZIPファイル '$zipFileName' の内容を '${{ env.mekiki_setting }}' に展開しました。"
 
             #展開したzipファイルのディレクトリにlogフォルダの作成
-            $logFolder = "${{ env.mekiki_setting }}/x64"
+            $logFolder = "${{ env.mekiki_setting }}/x64/log"
             if (-Not (Test-Path $logFolder)) {
               New-Item -Path $logFolder -ItemType Directory | Out-Null
             }
             # logファイルの作成
-            $logFile = "$logFolder/$timestamp.log"
+            $logFile = "$logFolder/$date_suffix.log"
             if (-Not (Test-Path $logFile)) {
               New-Item -Path $logFile -ItemType Directory | Out-Null
             }
