@@ -1,11 +1,6 @@
 name: Endurance Test
 
-run-name: |
-  $GithubActionName = ${{ github.event.inputs.yaml_file }}
-  if($GithubActionName -eq ''){
-    $GithubActionName = 'scheduled'
-  }
-  "Endurance test : $($GithubActionName)"
+run-name: "Endurance test ${{ github.event.inputs.yaml_file }}"
 on:
   schedule:
     - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
