@@ -192,23 +192,40 @@ jobs:
               $logResults = $filteredLines
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-              if($filteredLines -match "異常" -or -not $process) {
-                Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
+
+              function Handle-TestFailure {
+                param (
+                  [string]$message,     # エラーメッセージ
+                  [string]$testName,    # テスト名
+                  [string]$logFilePath, # ログファイルパス
+                  [string]$resultsFilePath, # 結果のファイルパス
+                  [string]$logResultsFilePath # ログ結果のファイルパス
+                )
+
+                Write-Output "$message"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
-                $results += "$($tests.name): Failure"
-                $logHistory += "$($logResults)"
+                $results += "$testName: Failure"
+                $logHistory += "$logResults"
                 $results | Out-File -FilePath $resultsFilePath -Append
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
                 $logHistory | Out-File -FilePath $logResultsFilePath -Append
-                Get-Content  -Path $logFilePath | Write-Host
+                Get-Content -Path $logFilePath | Write-Host
                 Write-Output "結果が 'test_results_$($timestamp).txt' に保存されました"
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
-                Write-Host "::error::$($tests.name)テスト中に異常が発生しました"
+                Write-Host "::error::$message"
                 exit 1
-              } else {
-                Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
+
+              if ($filteredLines -match "異常") {
+                $errorMessage = "$($deadTime): $($tests.name)テスト中にログ内で『異常』が検知されました"
+                Handle-TestFailure -message $errorMessage -testName $tests.name -logFilePath $logFilePath -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath
+              }
+              if (-not $process) {
+                $errorMessage = "$($deadTime): $($tests.name)テスト中にプロセスが停止していることを検知しました"
+                Handle-TestFailure -message $errorMessage -testName $tests.name -logFilePath $logFilePath -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath
+              }
+              Write-Output "$($deadTime): $($tests.name)は動作しています"
             }
             if (-Not $processStopped) { 
               Write-Output "$($tests.name) のテストが成功しました"
