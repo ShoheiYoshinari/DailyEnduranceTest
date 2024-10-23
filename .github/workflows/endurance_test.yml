@@ -154,10 +154,10 @@ jobs:
             Start-Sleep -Seconds 5
             Write-Output "Checking if Mekiki process is alive..."
             $processName = "Hutzper.Project.Mekiki"
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
             $startTime = Get-Date
             $endTime = $startTime.AddMinutes(1)
             while ((Get-Date) -lt $endTime) {
+              $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               if ($process) {
                 Write-Output "$processName is running."
                 break
@@ -191,6 +191,7 @@ jobs:
               }
               $logResults = $filteredLines
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
               if ($filteredLines -match "異常" -or $process.HasExited) {
                 Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
