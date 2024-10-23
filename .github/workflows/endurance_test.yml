@@ -204,6 +204,7 @@ jobs:
                 Write-Output "$message"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += "$($tests.name): Failure"
+                $results += "$($message)"
                 $logHistory += "$logResults"
                 $results | Out-File -FilePath $resultsFilePath -Append
                 $errorLines | Out-File -FilePath $resultsFilePath -Append
