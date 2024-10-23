@@ -203,6 +203,7 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
                 Write-Host "::error::$($tests.name)テスト中に異常が発生しました"
+                exit 1
               } else {
                 Write-Output "$($deadTime): $($tests.name)は動作しています"
               }
