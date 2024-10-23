@@ -192,7 +192,7 @@ jobs:
               $logResults = $filteredLines
               $deadTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-              if ($filteredLines -match "異常" -or $process.HasExited) {
+              if($filteredLines -match "異常" -or -not $process) {
                 Write-Output "$($deadTime): $($tests.name)テスト中に異常を検知しました"
                 $errorLines = $filteredLines | Select-String "異常" | ForEach-Object { $_.Line }
                 $results += "$($tests.name): Failure"
