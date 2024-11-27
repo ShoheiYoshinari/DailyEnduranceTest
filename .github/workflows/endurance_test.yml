@@ -87,6 +87,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y stress-ng
+        shell: powershell
 
       - name: Read YAML File and Run Tests
         run: |
