@@ -217,11 +217,16 @@ jobs:
                 exit 1
               }
 
-              if ($filteredLines -match "異常") {
+              if ($filteredLines -match "exception" -and $tests.exception_log) {
+                $errorMessage = "$($deadTime): $($tests.name)テスト中にログ内で『exception』が検知されました"
+                Handle-TestFailure -message $errorMessage -logFilePath $logFilePath -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath
+              }
+
+              if ($filteredLines -match "異常" -and $tests.error_log) {
                 $errorMessage = "$($deadTime): $($tests.name)テスト中にログ内で『異常』が検知されました"
                 Handle-TestFailure -message $errorMessage -logFilePath $logFilePath -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath
               }
-              if (-not $process) {
+              if (-not $process -and $tests.process_alive) {
                 $errorMessage = "$($deadTime): $($tests.name)テスト中にプロセスが停止していることを検知しました"
                 Handle-TestFailure -message $errorMessage -logFilePath $logFilePath -resultsFilePath $resultsFilePath -logResultsFilePath $logResultsFilePath
               }
