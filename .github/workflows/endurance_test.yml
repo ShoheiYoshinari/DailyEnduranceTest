@@ -83,11 +83,6 @@ jobs:
           Install-Module -Name powershell-yaml -Scope CurrentUser -Force
         shell: powershell
 
-      - name: Install stress-ng on WSL
-        run: |
-          wsl sudo apt-get update
-          wsl sudo apt-get install -y stress-ng
-
       - name: Read YAML File and Run Tests
         run: |
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
