@@ -156,13 +156,8 @@ jobs:
             }
             if ($tests.disk_load) {
               Write-Output "Starting Disk load test with $($tests.disk_load)% Disk usage"
-              Start-Process -FilePath "wsl" -ArgumentList "stress-ng --hdd 1 --hdd-load $($tests.disk_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
+              Start-Process -FilePath "wsl" -ArgumentList "stress-ng -d 1 --hdd-bytes $($tests.disk_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
-            if ($tests.network_load) {
-              Write-Output "Starting Network load test with $($tests.network_load)Mbps"
-              Start-Process -FilePath "wsl" -ArgumentList "stress-ng --net 1 --net-load $($tests.network_load) --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
-            }
-            Write-Output "stress-ngによる負荷を開始しました..."
 
             Write-Output "Starting Mekiki application for test: $($tests.name)..."
             if (-Not (Test-Path "${{ env.vs_path }}")) {
