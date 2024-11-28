@@ -156,7 +156,7 @@ jobs:
             }
             if ($tests.disk_load) {
               Write-Output "Starting Disk load test with $($tests.disk_load)% Disk usage"
-              Start-Process -FilePath "wsl" -ArgumentList "stress-ng --hdd 1 --hdd-load $($tests.disk_load) --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
+              Start-Process -FilePath "wsl" -ArgumentList "stress-ng --hdd 1 --hdd-load $($tests.disk_load)M --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
             if ($tests.network_load) {
               Write-Output "Starting Network load test with $($tests.network_load)Mbps"
