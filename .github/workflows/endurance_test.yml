@@ -174,18 +174,18 @@ jobs:
             $startTime = Get-Date
             $endTime = $startTime.AddMinutes($tests.duration_minutes)
             Write-Output "プロセス $($tests.name) のテストを開始します"
-            
+
             # 指定された負荷テスト実行
             if ($tests.cpu_load) {
               Write-Output "Starting CPU load test with $($tests.cpu_load)% CPU usage"
               Start-Process -FilePath "wsl" -ArgumentList "stress-ng --cpu 0 --cpu-load $($tests.cpu_load) --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
             if ($tests.memory_load) {
-              Write-Output "Starting Memory load test with $($tests.memory_load)MB"
+              Write-Output "Starting Memory load test with $($tests.memory_load)GB"
               Start-Process -FilePath "wsl" -ArgumentList "stress-ng --vm 1 --vm-bytes $($tests.memory_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
             if ($tests.disk_load) {
-              Write-Output "Starting Disk load test with $($tests.disk_load)% Disk usage"
+              Write-Output "Starting Disk load test with $($tests.disk_load)G Disk usage"
               Start-Process -FilePath "wsl" -ArgumentList "stress-ng -d 1 --hdd-bytes $($tests.disk_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
 
