@@ -276,6 +276,8 @@ jobs:
               $results += "$($tests.name): Success"
               $logHistory += "$($logResults)"
             }
+            Write-Host "テストが終了しました。トレースを停止します。"
+            $traceProcess | Stop-Process
             # トレースが正常終了したか確認
             if (Test-Path -Path $traceFilePath) {
               Write-Output "トレースファイルが生成されました: $traceFilePath"
@@ -284,9 +286,6 @@ jobs:
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
-            # トレースを終了 (テスト終了後に停止)
-            Write-Host "テストが終了しました。トレースを停止します。" -ForegroundColor Yellow
-            $traceProcess | Stop-Process
             Start-Sleep -Seconds 10
           }
           $results | Out-File -FilePath $resultsFilePath -Append
