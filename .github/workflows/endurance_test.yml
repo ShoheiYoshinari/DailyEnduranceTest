@@ -83,6 +83,11 @@ jobs:
           Install-Module -Name powershell-yaml -Scope CurrentUser -Force
         shell: powershell
 
+      - name: Install dotnet-trace
+        run: |
+          dotnet tool install -global dotnet-trace
+        shell: powershell
+
       - name: Read YAML File and Run Tests
         run: |
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
@@ -152,6 +157,7 @@ jobs:
             }
             Start-Process -FilePath "${{ env.vs_path }}" -ArgumentList "`"$($env:mekiki_project)`" /Run" -NoNewWindow -PassThru | Out-Null
             Start-Sleep -Seconds 5
+
             Write-Output "Checking if Mekiki process is alive..."
             $processName = "Hutzper.Project.Mekiki"
             $startTime = Get-Date
@@ -188,6 +194,12 @@ jobs:
               Write-Output "Starting Disk load test with $($tests.disk_load)G Disk usage"
               Start-Process -FilePath "wsl" -ArgumentList "stress-ng -d 1 --hdd-bytes $($tests.disk_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
+
+            #dotnet-traceで計測
+            Get-Process | Where-Object {$_.name -like "*mekiki*"}
+            $traceFilePath = "$env:MEKIKI_LOG_DIRECTORY/Mekiki_Trace.nettrace"
+            # dotnet trace collect をバックグラウンドで実行
+            Start-Process -FilePath "dotnet" -ArgumentList @("trace", "collect", "--process-id", $process.Id, "--output", $traceFilePath) -NoNewWindow
 
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
@@ -229,6 +241,7 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
                 Write-Host "::error::$message"
+                Stop-Process -Name "dotnet" -Force -ErrorAction SilentlyContinue  # トレースを終了
                 exit 1
               }
 
@@ -250,6 +263,12 @@ jobs:
               Write-Output "$($tests.name) のテストが成功しました"
               $results += "$($tests.name): Success"
               $logHistory += "$($logResults)"
+            }
+            # トレースが正常終了したか確認
+            if (Test-Path -Path $traceFilePath) {
+              Write-Output "トレースファイルが生成されました: $traceFilePath"
+            } else {
+              Write-Error "トレースファイルが生成されませんでした。"
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
