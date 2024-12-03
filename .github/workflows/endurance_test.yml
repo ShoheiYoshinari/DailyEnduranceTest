@@ -210,7 +210,10 @@ jobs:
             $traceFilePath = Join-Path -Path $traceDir -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath" -ForegroundColor Cyan
-            $duration = "{0:D2}:{1:D2}:00" -f [math]::Floor($tests.duration_minutes / 60), $tests.duration_minutes % 60
+            $durationMinutes = $tests.duration_minutes
+            $hours = [math]::Floor($durationMinutes / 60)
+            $minutes = $durationMinutes % 60
+            $duration = "{0:D2}:00:{1:D2}:00" -f $hours, $minutes
             $traceProcess = Start-Process -FilePath "dotnet" -ArgumentList @("trace", "collect", "--process-id", $mekikiProcessId, "--profile", "gc-collect", "--output", $traceFilePath, "--duration", $duration) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
