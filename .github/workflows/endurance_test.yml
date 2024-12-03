@@ -83,11 +83,6 @@ jobs:
           Install-Module -Name powershell-yaml -Scope CurrentUser -Force
         shell: powershell
 
-      - name: Install dotnet-trace
-        run: |
-          dotnet tool install -global dotnet-trace
-        shell: powershell
-
       - name: Read YAML File and Run Tests
         run: |
           $timestamp = '${{ steps.get_timestamp_and_suffix.outputs.timestamp }}'
