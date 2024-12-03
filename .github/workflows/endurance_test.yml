@@ -210,7 +210,7 @@ jobs:
             $traceFilePath = Join-Path -Path $traceDir -ChildPath "Mekiki_Trace_$($timestamp).nettrace"
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath" -ForegroundColor Cyan
-            Start-Process -FilePath "dotnet" -ArgumentList @("trace", "collect", "--process-id", $mekikiProcessId, "--profile", "gc-collect", "--output", $traceFilePath, "--duration", $tests.duration_minutes) -NoNewWindow
+            $traceProcess = Start-Process -FilePath "dotnet" -ArgumentList @("trace", "collect", "--process-id", $mekikiProcessId, "--profile", "gc-collect", "--output", $traceFilePath, "--duration", $tests.duration_minutes) -NoNewWindow
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
 
             $processStopped = $false
@@ -253,7 +253,7 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
                 Write-Host "::error::$message"
-                Stop-Process -Name "dotnet" -Force -ErrorAction SilentlyContinue  # トレースを終了
+                $traceProcess | Stop-Process #トレースを終了
                 exit 1
               }
 
@@ -284,6 +284,9 @@ jobs:
             }
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
+            # トレースを終了 (テスト終了後に停止)
+            Write-Host "テストが終了しました。トレースを停止します。" -ForegroundColor Yellow
+            $traceProcess | Stop-Process
             Start-Sleep -Seconds 10
           }
           $results | Out-File -FilePath $resultsFilePath -Append
