@@ -212,19 +212,18 @@ jobs:
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
             # duration の設定 (dd:hh:mm:ss 形式)
-            $days = [math]::Floor($tests.duration_minutes / 1440)
-            $hours = [math]::Floor(($tests.duration_minutes % 1440) / 60)
-            $minutes = $tests.duration_minutes % 60
-            $duration = "{0:D2}:{1:D2}:{2:D2}:{3:D2}" -f $days, $hours, $minutes, 0
-
+            $days = [math]::Floor([int]$tests.duration_minutes / 1440)
+            $hours = [math]::Floor(([int]$tests.duration_minutes % 1440) / 60)
+            $minutes = [int]$tests.duration_minutes % 60
+            $seconds = 0
+            # 形式を指定して duration を作成
+            $duration = "{0:D2}:{1:D2}:{2:D2}:{3:D2}" -f $days, $hours, $minutes, $seconds
             # duration の確認
             Write-Host "Duration: $duration"
-
             # null や空を確認
             if ([string]::IsNullOrEmpty($duration)) {
               throw "Duration value is null or empty. Please check your input."
             }
-
             # Start-Process で dotnet trace を実行
             Start-Process -FilePath "dotnet" -ArgumentList @(
               "trace", "collect",
