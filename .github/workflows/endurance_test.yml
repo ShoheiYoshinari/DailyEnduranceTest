@@ -192,6 +192,11 @@ jobs:
             }
 
             # dotnet-trace
+            # テストごとのフォルダの作成
+            $traceFolder = "C:/Users/hutzper2/$timestamp"
+            if (-Not (Test-Path $testsFolder)) {
+              New-Item -Path $traceFolder -ItemType Directory | Out-Null
+            }
             # Mekiki プロセスを取得
             $mekikiProcess = Get-Process | Where-Object { $_.Name -like "*mekiki*" }
             if (-not $mekikiProcess) {
@@ -201,8 +206,14 @@ jobs:
             # プロセス ID の取得
             $mekikiProcessId = $mekikiProcess.Id
             Write-Host "Mekiki プロセスが見つかりました。プロセス ID: $mekikiProcessId"
+            # トレースファイル保存用のディレクトリとファイル名
+            if (-not (Test-Path -Path $traceFolder)) {
+              New-Item -ItemType Directory -Path $traceFolder | Out-Null
+            }
+            $traceFilePath = Join-Path -Path $traceFolder -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
+
             # 分を dd:hh:mm:ss に変換
             $days = [math]::Floor($tests.duration_minutes / 1440)
             $hours = [math]::Floor(($tests.duration_minutes % 1440) / 60)
@@ -223,7 +234,8 @@ jobs:
               "trace", "collect",
               "--process-id", $mekikiProcessId,
               "--profile", "gc-collect",
-              "--duration", $duration
+              "--duration", $duration,
+              "--output", $traceFilePath
             ) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
