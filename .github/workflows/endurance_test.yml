@@ -192,8 +192,11 @@ jobs:
             }
 
             # dotnet-trace
-            # 環境変数からトレースディレクトリを取得
-            $traceDir = "${{ env.dotnet_trace_dir }}"
+            # テストごとのフォルダの作成
+            $traceFolder = "${{ env.dotnet_trace_dir }}/$timestamp"
+            if (-Not (Test-Path $testsFolder)) {
+              New-Item -Path $traceFolder -ItemType Directory | Out-Null
+            }
             # Mekiki プロセスを取得
             $mekikiProcess = Get-Process | Where-Object { $_.Name -like "*mekiki*" }
             if (-not $mekikiProcess) {
@@ -204,10 +207,10 @@ jobs:
             $mekikiProcessId = $mekikiProcess.Id
             Write-Host "Mekiki プロセスが見つかりました。プロセス ID: $mekikiProcessId"
             # トレースファイル保存用のディレクトリとファイル名
-            if (-not (Test-Path -Path $traceDir)) {
-              New-Item -ItemType Directory -Path $traceDir | Out-Null
+            if (-not (Test-Path -Path $traceFolder)) {
+              New-Item -ItemType Directory -Path $traceFolder | Out-Null
             }
-            $traceFilePath = Join-Path -Path $traceDir -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
+            $traceFilePath = Join-Path -Path $traceFolder -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
