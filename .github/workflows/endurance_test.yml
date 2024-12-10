@@ -210,7 +210,7 @@ jobs:
             if (-not (Test-Path -Path $traceFolder)) {
               New-Item -ItemType Directory -Path $traceFolder | Out-Null
             }
-            $traceFilePath = Join-Path -Path $traceFolder -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
+            $traceFilePath = Join-Path -Path $traceDir -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
@@ -234,7 +234,8 @@ jobs:
               "trace", "collect",
               "--process-id", $mekikiProcessId,
               "--profile", "gc-collect",
-              "--duration", $duration
+              "--duration", $duration,
+              "--output", "C:\Users\shohei.yoshinari_hut\Downloads"
             ) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
