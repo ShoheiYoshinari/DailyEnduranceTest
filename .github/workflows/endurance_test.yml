@@ -235,7 +235,7 @@ jobs:
               "--process-id", $mekikiProcessId,
               "--profile", "gc-collect",
               "--duration", $duration,
-              "--output", "C:\Users\shohei.yoshinari_hut\Downloads"
+              "--output", $traceFilePath
             ) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
