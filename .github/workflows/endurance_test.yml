@@ -224,14 +224,13 @@ jobs:
             $hoursStr = $hours.ToString("00")
             $minutesStr = $minutes.ToString("00")
             $secondsStr = $seconds.ToString("00")
-            # 最終的な形式に組み立てる
             $duration =  "${daysStr}:${hoursStr}:${minutesStr}:${secondsStr}"
             #  結果を表示
             Write-Host $duration
 
             # Start-Process で dotnet trace を実行
             $traceProcess = Start-Process -FilePath "dotnet" `
-            -ArgumentList "trace --process-id $mekikiProcessId --duration $duration --output $traceFilePath" `
+            -ArgumentList "trace collect --buffersize 1GB --process-id $mekikiProcessId --duration $duration --output $traceFilePath" `
             -PassThru -NoNewWindow
             Write-Host "dotnet trace を開始しました。プロセスID: $($traceProcess.Id)"
 
