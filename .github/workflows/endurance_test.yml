@@ -197,7 +197,7 @@ jobs:
             # Mekiki プロセスを取得
             $mekikiProcess = Get-Process | Where-Object { $_.Name -like "*mekiki*" }
             if (-not $mekikiProcess) {
-              Write-Host "Mekiki プロセスが見つかりません。アプリケーションが起動していることを確認してください。" -ForegroundColor Red
+              Write-Host "Mekiki プロセスが見つかりません。アプリケーションが起動していることを確認してください。"
               exit 1
             }
             # プロセス ID の取得
@@ -209,8 +209,18 @@ jobs:
             }
             $traceFilePath = Join-Path -Path $traceDir -ChildPath "Mekiki_Trace_$($tests.name).nettrace"
             # dotnet-trace コマンドの実行
-            Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath" -ForegroundColor Cyan
-            $traceProcess = Start-Process -FilePath "dotnet" -ArgumentList @("trace", "collect", "--process-id", $mekikiProcessId, "--profile", "gc-collect", "--output", $traceFilePath) -NoNewWindow
+            Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
+            $durationMinutes = $tests.duration_minutes
+            $hours = [math]::Floor($durationMinutes / 60)
+            $minutes = $durationMinutes % 60
+            $duration = "{0:D2}:00:{1:D2}:00" -f $hours, $minutes
+            Start-Process -FilePath "dotnet" -ArgumentList @(
+              "trace", "collect", 
+              "--process-id", $mekikiProcessId, 
+              "--profile", "gc-collect", 
+              "--output", $traceFilePath,
+              "--duration", $duration
+            ) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
             $processStopped = $false
