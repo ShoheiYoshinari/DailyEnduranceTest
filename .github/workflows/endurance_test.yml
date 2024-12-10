@@ -267,7 +267,6 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
                 Write-Host "::error::$message"
-                $traceProcess | Stop-Process #トレースを終了
                 exit 1
               }
 
@@ -291,7 +290,6 @@ jobs:
               $logHistory += "$($logResults)"
             }
             Write-Host "テストが終了しました。トレースを停止します。"
-            $traceProcess | Stop-Process
             # トレースが正常終了したか確認
             if (Test-Path -Path $traceFilePath) {
               Write-Output "トレースファイルが生成されました: $traceFilePath"
