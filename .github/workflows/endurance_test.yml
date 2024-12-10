@@ -211,14 +211,20 @@ jobs:
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
-            # Start-Process で dotnet trace を実行
-            Start-Process -FilePath "dotnet" -ArgumentList @(
-              "trace", "collect",
-              "--process-id", $mekikiProcessId,
-              "--profile", "gc-collect",
-              "--duration", "00:00:01:00" * $tests.duration_minutes, 
-              "--output", $traceFilePath
-            ) -NoNewWindow
+            # 分を dd:hh:mm:ss に変換
+            $days = [math]::Floor($tests.duration_minutes / 1440)
+            $hours = [math]::Floor(($tests.duration_minutes % 1440) / 60)
+            $minutes = $tests.duration_minutes % 60
+            $seconds = 0  # 秒は常に0と仮定
+            # 各部分を2桁の文字列にフォーマット
+            $daysStr = $days.ToString("00")
+            $hoursStr = $hours.ToString("00")
+            $minutesStr = $minutes.ToString("00")
+            $secondsStr = $seconds.ToString("00")
+            # 最終的な形式に組み立てる
+            $duration = "$daysStr:$hoursStr:$minutesStr:$secondsStr"
+            #  結果を表示
+            Write-Host $duration
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
             $processStopped = $false
