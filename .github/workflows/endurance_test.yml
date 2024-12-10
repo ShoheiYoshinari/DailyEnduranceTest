@@ -222,7 +222,7 @@ jobs:
             $minutesStr = $minutes.ToString("00")
             $secondsStr = $seconds.ToString("00")
             # 最終的な形式に組み立てる
-            $duration = "$daysStr:$hoursStr:$minutesStr:$secondsStr"
+            $duration = $duration = "${daysStr}:${hoursStr}:${minutesStr}:${secondsStr}"
             #  結果を表示
             Write-Host $duration
 
