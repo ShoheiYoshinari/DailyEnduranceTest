@@ -226,6 +226,15 @@ jobs:
             #  結果を表示
             Write-Host $duration
 
+            # Start-Process で dotnet trace を実行
+            Start-Process -FilePath "dotnet" -ArgumentList @(
+              "trace", "collect",
+              "--process-id", $mekikiProcessId,
+              "--profile", "gc-collect",
+              "--duration", $duration,
+              "--output", $traceFilePath
+            ) -NoNewWindow
+
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
