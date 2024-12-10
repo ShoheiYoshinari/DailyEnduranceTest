@@ -234,8 +234,7 @@ jobs:
               "trace", "collect",
               "--process-id", $mekikiProcessId,
               "--profile", "gc-collect",
-              "--duration", $duration,
-              "--output", $traceFilePath
+              "--duration", $duration
             ) -NoNewWindow
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
