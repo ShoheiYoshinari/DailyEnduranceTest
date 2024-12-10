@@ -193,7 +193,7 @@ jobs:
 
             # dotnet-trace
             # テストごとのフォルダの作成
-            $traceFolder = "C:/Users/hutzper2/$timestamp"
+            $traceFolder = "${{ env.dotnet_trace_dir }}/$timestamp"
             if (-Not (Test-Path $testsFolder)) {
               New-Item -Path $traceFolder -ItemType Directory | Out-Null
             }
