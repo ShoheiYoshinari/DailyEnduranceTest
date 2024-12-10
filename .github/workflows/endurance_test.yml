@@ -2,8 +2,8 @@ name: Endurance Test
 
 run-name: "Endurance test ${{ github.event.inputs.yaml_file }}"
 on:
-  schedule:
-    - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
+  #schedule:
+  #  - cron: '0 22 * * *'  # 毎日22:00にプロセスを開始します
   workflow_dispatch:
     inputs:
       yaml_file:
@@ -231,7 +231,7 @@ jobs:
 
             # Start-Process で dotnet trace を実行
             $traceProcess = Start-Process -FilePath "dotnet" `
-            -ArgumentList "trace collect --process-id $mekikiProcessId --duration $duration --output $traceFilePath --ContinueOnError" `
+            -ArgumentList "trace --process-id $mekikiProcessId --duration $duration --output $traceFilePath --ContinueOnError" `
             -PassThru -NoNewWindow
             Write-Host "dotnet trace を開始しました。プロセスID: $($traceProcess.Id)"
 
