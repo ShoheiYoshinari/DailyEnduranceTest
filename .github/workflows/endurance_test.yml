@@ -230,7 +230,7 @@ jobs:
 
             # Start-Process で dotnet trace を実行
             $traceProcess = Start-Process -FilePath "dotnet" `
-            -ArgumentList "trace collect --buffersize 1GB --process-id $mekikiProcessId --duration $duration --output $traceFilePath" `
+            -ArgumentList "trace collect --process-id $mekikiProcessId --duration $duration --output $traceFilePath" `
             -PassThru -NoNewWindow
             Write-Host "dotnet trace を開始しました。プロセスID: $($traceProcess.Id)"
 
