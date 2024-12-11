@@ -230,11 +230,8 @@ jobs:
             #  結果を表示
             Write-Host $duration
 
-            # Start-Process で dotnet trace を実行
-            $traceProcess = Start-Process -FilePath "dotnet" `
-            -ArgumentList "trace collect --process-id $mekikiProcessId --profile gc-collect --duration $duration --output $traceFilePath" `
-            -PassThru -NoNewWindow
-            Write-Host "dotnet trace を開始しました。プロセスID: $($traceProcess.Id)"
+            #dotnet trace を実行
+            dotnet trace collect --process-id $mekikiprocessId --profile gc-collect --duration $duration --output $traceFilePath
 
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
             $processStopped = $false
@@ -277,9 +274,6 @@ jobs:
                 Write-Output "ログが 'log_results_$($timestamp).txt' に保存されました"
                 # 異常をGitHub Actionsに通知し、ジョブを失敗させる
                 Write-Host "::error::$message"
-                #dotnet trace終了
-                Stop-Process -Id $traceProcess.Id -Force -ErrorAction SilentlyContinue
-                Write-Host "dotnet trace を終了しました。"
                 exit 1
               }
 
@@ -302,9 +296,6 @@ jobs:
               $results += "$($tests.name): Success"
               $logHistory += "$($logResults)"
             }
-            # dotnet trace 停止
-            Write-Host "dotnet trace を終了しています..."
-            Stop-Process -Id $traceProcess.Id -Force -ErrorAction SilentlyContinue
             Write-Output "Visual Studioを終了しています..."
             Stop-Process -Name devenv -Force
             Start-Sleep -Seconds 10
