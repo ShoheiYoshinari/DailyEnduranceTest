@@ -51,7 +51,7 @@ jobs:
 
       - name: Install dotnet-trace tool
         run: |
-          dotnet tool install --global dotnet-trace --version 6.0.0
+          dotnet tool install --global dotnet-trace --version 6.0.428
         shell: powershell
 
       - name: Verify dotnet-trace Installation and .NET Version
