@@ -29,7 +29,7 @@ env:
   test_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   dotnet_trace_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/trace"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
-  dotnet_version: "8.0.x"
+  dotnet_version: "6.0.x"
 
 jobs:
   endurance_test_mekiki:
@@ -42,22 +42,6 @@ jobs:
           $dateSuffix = (Get-Date -Format "yyyyMMdd")
           echo "::set-output name=timestamp::$timestamp"
           echo "::set-output name=date_suffix::$dateSuffix"
-        shell: powershell
-
-      - name: Set up .NET SDK ${{ env.dotnet_version }}
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ env.dotnet_version }}
-
-      - name: Install dotnet-trace tool
-        run: |
-          dotnet tool install --global dotnet-trace --version 6.0.428
-        shell: powershell
-
-      - name: Verify dotnet-trace Installation and .NET Version
-        run: |
-          dotnet --version
-          dotnet-trace --version
         shell: powershell
 
 
