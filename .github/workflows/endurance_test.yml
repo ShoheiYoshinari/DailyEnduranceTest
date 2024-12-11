@@ -29,6 +29,7 @@ env:
   test_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   dotnet_trace_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/trace"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
+  dotnet_version: "8.0.x"
 
 jobs:
   endurance_test_mekiki:
@@ -42,6 +43,40 @@ jobs:
           echo "::set-output name=timestamp::$timestamp"
           echo "::set-output name=date_suffix::$dateSuffix"
         shell: powershell
+
+      - name: Set up .NET SDK ${{ env.dotnet_version }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.dotnet_version }}
+
+      - name: Ensure .NET SDK Version (global.json)
+        run: |
+          $globalJsonPath = "${{ env.test_dir }}/global.json"
+          if (-Not (Test-Path $globalJsonPath)) {
+              Write-Output "Creating global.json to specify .NET version."
+              @"
+              {
+                  "sdk": {
+                      "version": "${{ env.dotnet_version }}"
+                  }
+              }
+              "@ | Out-File -FilePath $globalJsonPath -Encoding utf8
+          } else {
+              Write-Output "global.json already exists."
+          }
+        shell: powershell
+
+      - name: Install dotnet-trace tool
+        run: |
+          dotnet tool install --global dotnet-trace --version 8.0.0
+        shell: powershell
+
+      - name: Verify dotnet-trace Installation and .NET Version
+        run: |
+          dotnet --version
+          dotnet-trace --version
+        shell: powershell
+
 
       - name: Checkout Repository
         uses: actions/checkout@v3
