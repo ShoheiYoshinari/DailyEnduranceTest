@@ -49,26 +49,9 @@ jobs:
         with:
           dotnet-version: ${{ env.dotnet_version }}
 
-      - name: Ensure .NET SDK Version (global.json)
-        run: |
-          $globalJsonPath = "${{ env.test_dir }}/global.json"
-          if (-Not (Test-Path $globalJsonPath)) {
-              Write-Output "Creating global.json to specify .NET version."
-              @"
-              {
-                  "sdk": {
-                      "version": "${{ env.dotnet_version }}"
-                  }
-              }
-              "@ | Out-File -FilePath $globalJsonPath -Encoding utf8
-          } else {
-              Write-Output "global.json already exists."
-          }
-        shell: powershell
-
       - name: Install dotnet-trace tool
         run: |
-          dotnet tool install --global dotnet-trace --version 8.0.0
+          dotnet tool install --global dotnet-trace --version 6.0.0
         shell: powershell
 
       - name: Verify dotnet-trace Installation and .NET Version
