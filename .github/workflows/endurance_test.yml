@@ -217,7 +217,7 @@ jobs:
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
             # dotnet trace を実行
-            ./scripts/start_dotnet_trace.ps1 -ProcessId $mekikiProcessId -Duration $tests.duration_minutes -OutputFile $traceFilePath
+            Start-Process powershell.exe -ArgumentList "-NoExit", "-File", "./scripts/start_dotnet_trace.ps1", "-ProcessId", "$mekikiProcessId", "-Duration", "$($tests.duration_minutes)", "-OutputFile", "$traceFilePath" -WindowStyle Hidden
             Write-Host "dotnet trace started in background."
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
