@@ -216,8 +216,12 @@ jobs:
             # dotnet-trace コマンドの実行
             Write-Host "dotnet trace collect を開始します。トレースファイル: $traceFilePath"
 
-            #dotnet trace を実行
-            ./scripts/start_dotnet_trace.ps1 -ProcessId $mekikiProcessId -Duration $tests.duration_minutes -OutputFile $traceFilePath
+            # Duration を秒単位に変換 (tests.duration_minutes が分単位と仮定)
+            $durationInSeconds = $tests.duration_minutes * 60
+            $duration = New-TimeSpan -Seconds $durationInSeconds
+
+            # dotnet trace を実行
+            ./scripts/start_dotnet_trace.ps1 -ProcessId $mekikiProcessId -Duration $duration -OutputFile $traceFilePath
             Write-Host "dotnet trace started in background."
             
             $processStopped = $false
