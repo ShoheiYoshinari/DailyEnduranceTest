@@ -65,21 +65,21 @@ jobs:
           git pull origin $branch
         shell: powershell
 
-      - name: Dotnet Build or Publish 
-        run: |
-          $operation = '${{ github.event.inputs.build_or_publish }}'
-          if ($operation -eq '') {
-            $operation = 'build'
-          }
-          if ($operation -eq 'build') {
-            dotnet build ${{ env.mekiki_project }} -c Release
-          } elseif ($operation -eq 'publish') {
-            dotnet publish ${{ env.mekiki_project }} -c Release -o "${{ env.test_dir }}/publish"
-          } else {
-            Write-Error "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
-            exit 1
-          }
-        shell: powershell
+      #- name: Dotnet Build or Publish 
+      #  run: |
+      #    if ($operation -eq '') {
+      #      $operation = 'build'
+      #    }
+      #    if ($operation -eq 'build') {
+      #      dotnet build ${{ env.mekiki_project }} -c Release
+      #    } elseif ($operation -eq 'publish') {
+      #      dotnet publish ${{ env.mekiki_project }} -c Release -o "${{ env.test_dir }}/publish"
+      #    } else {
+      #      Write-Error "無効なオプションが指定されました。'build' または 'publish' を指定してください。"
+      #      exit 1
+      #    }
+      #  shell: powershell
+      ##
 
       - name: Install PowerShell-Yaml Module
         run: |
