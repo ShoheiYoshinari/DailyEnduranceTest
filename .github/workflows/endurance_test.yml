@@ -231,10 +231,11 @@ jobs:
             Write-Host $duration
 
             #dotnet trace を実行
-            dotnet trace collect --process-id $mekikiprocessId --profile gc-collect --duration $duration --output $traceFilePath &
-            TRACE_PID = &|
-            echo "dotnet trace started with PID: $TRACE_PID"
-            wait $TRACE_PID || echo "dotnet trace finished."
+             Start-Process -FilePath "dotnet" `
+                  -ArgumentList "trace collect --process-id $mekikiprocessId --profile gc-collect --duration $duration --output $traceFilePath" `
+                  -NoNewWindow -Wait
+            Write-Host "dotnet trace finished."
+            
             Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
             
             $processStopped = $false
