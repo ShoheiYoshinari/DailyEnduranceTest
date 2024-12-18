@@ -230,12 +230,8 @@ jobs:
             #  結果を表示
             Write-Host $duration
 
-            $scriptPath = "./scripts/start_dotnet_trace.ps1"
             #dotnet trace を実行
-            Start-Job -ScriptBlock {
-              param($scriptPath, $processId, $duration, $outputFile)
-              & $scriptPath -ProcessId $processId -Duration $duration -OutputFile $outputFile
-            } -ArgumentList $scriptPath, $processId, $duration, $outputFile
+            ./scripts/start_dotnet_trace.ps1 -ProcessId $processId -Duration $duration -OutputFile $outputFile
             Write-Host "dotnet trace started in background."
             
             $processStopped = $false
