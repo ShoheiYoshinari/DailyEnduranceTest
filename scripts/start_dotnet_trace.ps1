@@ -1,23 +1,25 @@
 param (
-    [string]$ProcessId,
-    [int]$Duration,          # Durationは分で渡される
-    [string]$OutputFile
+    [Parameter(Mandatory=$true)]
+    [int]$ProcessId,      # プロセス ID
+
+    [Parameter(Mandatory=$true)]
+    [TimeSpan]$Duration,  # トレースの期間 (TimeSpan オブジェクト)
+
+    [Parameter(Mandatory=$true)]
+    [string]$OutputFile   # 出力ファイルのパス
 )
 
-# 入力されたDuration (分) を秒単位に変換
-$durationInSeconds = $Duration * 60
+# dotnet-trace のコマンドを作成
+$dotnetTraceCommand = "dotnet-trace collect --process-id $ProcessId --duration $($Duration.TotalSeconds) --output $OutputFile"
 
-# DurationをTimeSpan形式で設定
-$duration = New-TimeSpan -Seconds $durationInSeconds
+Write-Host "Executing: $dotnetTraceCommand"
 
-Write-Host "Duration for dotnet trace: $duration"
-
-Write-Host "Starting dotnet trace..."
-dotnet trace collect --process-id $ProcessId --profile gc-collect --duration $duration --output $OutputFile
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "dotnet trace failed with exit code $LASTEXITCODE"
+# dotnet-trace コマンドを実行
+try {
+    # dotnet-trace コマンドを非同期で実行
+    Start-Process -FilePath "dotnet-trace" -ArgumentList "collect --process-id $ProcessId --duration $($Duration.TotalSeconds) --output $OutputFile" -Wait
+    Write-Host "dotnet trace completed successfully."
+} catch {
+    Write-Host "Error occurred while executing dotnet trace: $_"
     exit 1
 }
-
-Write-Host "dotnet trace completed successfully. Output file: $OutputFile"
