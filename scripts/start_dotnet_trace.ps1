@@ -10,14 +10,14 @@ param (
 )
 
 # dotnet-trace のコマンドを作成
-$dotnetTraceCommand = "dotnet-trace collect --process-id $ProcessId --duration $($Duration.TotalSeconds) --output $OutputFile"
+$dotnetTraceCommand = "dotnet trace collect --process-id $ProcessId --duration $($Duration.TotalSeconds) --output $OutputFile"
 
 Write-Host "Executing: $dotnetTraceCommand"
 
 # dotnet-trace コマンドを実行
 try {
     # dotnet-trace コマンドを非同期で実行
-    Start-Process -FilePath "dotnet-trace" -ArgumentList "collect --process-id $ProcessId --duration $($Duration.TotalSeconds) --output $OutputFile" -Wait
+    Invoke-Expression $dotnetTraceCommand
     Write-Host "dotnet trace completed successfully."
 } catch {
     Write-Host "Error occurred while executing dotnet trace: $_"
