@@ -29,7 +29,7 @@ env:
   test_results_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/result"
   dotnet_trace_dir: "C:/Hutzper/self_host_runner/CSharp.Hutzper.Library/test_endurance/trace"
   vs_path: "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe"
-  dotnet_version: "6.0.x"
+  dotnet_trace_script: "./scripts/start_dotnet_trace.ps1"
 
 jobs:
   endurance_test_mekiki:
@@ -230,13 +230,13 @@ jobs:
             #  結果を表示
             Write-Host $duration
 
+            $scriptPath = "./scripts/start_dotnet_trace.ps1"
             #dotnet trace を実行
-             Start-Process -FilePath "dotnet" `
-                  -ArgumentList "trace collect --process-id $mekikiprocessId --profile gc-collect --duration $duration --output $traceFilePath" `
-                  -NoNewWindow -Wait
-            Write-Host "dotnet trace finished."
-            
-            Write-Host "トレースが開始されました。プロセス ID: $mekikiProcessId"
+            Start-Job -ScriptBlock {
+              param($scriptPath, $processId, $duration, $outputFile)
+              & $scriptPath -ProcessId $processId -Duration $duration -OutputFile $outputFile
+            } -ArgumentList $scriptPath, $processId, $duration, $outputFile
+            Write-Host "dotnet trace started in background."
             
             $processStopped = $false
             while ((Get-Date) -lt $endTime) {
