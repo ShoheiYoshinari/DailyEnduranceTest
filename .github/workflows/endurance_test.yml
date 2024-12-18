@@ -193,7 +193,7 @@ jobs:
               Start-Process -FilePath "wsl" -ArgumentList "stress-ng -d 1 --hdd-bytes $($tests.disk_load)G --timeout $($tests.duration_minutes)m" -NoNewWindow -PassThru | Out-Null
             }
 
-            if(tests.dotnet_trace) {
+            if($tests.dotnet_trace) {
               # テストごとのフォルダの作成
               $traceFolder = "${{ env.dotnet_trace_dir }}/$timestamp"
               if (-Not (Test-Path $testsFolder)) {
