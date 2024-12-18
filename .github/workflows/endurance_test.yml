@@ -54,7 +54,7 @@ jobs:
         run: |
           $branch = '${{ github.ref_name }}'
           if ($branch -eq 'main') {
-            $branch = 'test_endurance'
+            $branch = 'develop'
           }
           if (-Not (Test-Path "${{ env.test_dir }}")) {
             git clone ${{ env.repository_url }} ${{ env.test_dir }}
