@@ -4,10 +4,8 @@ param (
     [string]$OutputFile
 )
 
-# 結果を表示
-Write-Host "Duration for dotnet trace: $durationInSeconds seconds"
-Write-Host "Process ID: $ProcessId"
-Write-Host "Output file: $OutputFile"
+# 入力されたDuration (分) を秒単位に変換
+$durationInSeconds = $Duration * 60
 
 # 結果を表示
 Write-Host "Duration for dotnet trace: $durationInSeconds seconds"
