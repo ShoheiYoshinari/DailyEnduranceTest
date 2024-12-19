@@ -1,8 +1,8 @@
 name: Endurance Test v2
 
 on:
-  schedule:
-    - cron: '0 22 * * *'
+  #schedule:
+    #- cron: '0 22 * * *'
   workflow_dispatch:
     inputs:
       yaml_file:

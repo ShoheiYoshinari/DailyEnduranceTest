@@ -1,8 +1,8 @@
 name: Build and Run Mekiki test
 
 on:
-  schedule:
-    - cron: '0 22 * * *'  # Start the process every day at 22:00
+  #schedule:
+    #- cron: '0 22 * * *'  # Start the process every day at 22:00
   workflow_dispatch:
     inputs:
       action:
