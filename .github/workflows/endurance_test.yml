@@ -67,9 +67,11 @@ jobs:
 
       - name: Dotnet Build or Publish 
         run: |
+          $operation = ${{ inputs.build_or_publish }}
           if ($operation -eq '') {
             $operation = 'build'
           }
+          
           if ($operation -eq 'build') {
             dotnet build ${{ env.mekiki_project }} -c Release
           } elseif ($operation -eq 'publish') {
