@@ -67,7 +67,7 @@ jobs:
 
       - name: Dotnet Build or Publish 
         run: |
-          $operation = ${{ inputs.build_or_publish }}
+          $operation = '${{ inputs.build_or_publish }}'
           if ($operation -eq '') {
             $operation = 'build'
           }
